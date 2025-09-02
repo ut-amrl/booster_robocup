@@ -11,7 +11,7 @@ To run training use command:
 ./isaaclab.sh -p scripts/attention/train.py --task Attention-T1-v0
 ```
 
-This will likely fail due to lack of resources. This model will require a multi-gpu set up to train. The multi-gpu command will look like:
+This will likely fail due to lack of resources. This model will require a multi-gpu set up to train unless you set `--num_envs` to a small number. The multi-gpu command will look like:
 ```bash
 CUDA_VISIBLE_DEVICES=2,3,8,9 python -m torch.distributed.run --nnodes=1 --nproc_per_node=4 scripts/student_teacher/train.py --task=Teacher-T1-v0 --headless --distributed --num_envs 1100 --video
 ```
