@@ -11,14 +11,14 @@ from collections import deque
 from torch.utils.tensorboard import SummaryWriter as TensorboardSummaryWriter
 
 import rsl_rl
-from booster_rl.algorithms import PPO
-from booster_rl.env import VecEnv
-from booster_rl.modules import (
+from humanoid_rl.algorithms import PPO
+from humanoid_rl.env import VecEnv
+from humanoid_rl.modules import (
     ActorCritic,
     ActorCriticRecurrent,
     EmpiricalNormalization,
 )
-from booster_utils.utils import store_code_state
+from humanoid_utils.utils import store_code_state
 
 
 class OnPolicyRunner:
@@ -76,12 +76,12 @@ class OnPolicyRunner:
             self.logger_type = self.logger_type.lower()
 
             if self.logger_type == "neptune":
-                from booster_utils.neptune_utils import NeptuneSummaryWriter
+                from humanoid_utils.neptune_utils import NeptuneSummaryWriter
 
                 self.writer = NeptuneSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
             elif self.logger_type == "wandb":
-                from booster_utils.wandb_utils import WandbSummaryWriter
+                from humanoid_utils.wandb_utils import WandbSummaryWriter
 
                 self.writer = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
