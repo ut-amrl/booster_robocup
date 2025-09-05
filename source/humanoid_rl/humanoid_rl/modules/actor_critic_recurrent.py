@@ -6,8 +6,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from booster_rl.modules.actor_critic import ActorCritic, get_activation
-from booster_utils.utils import unpad_trajectories
+from humanoid_rl.modules.actor_critic import ActorCritic, get_activation
+from humanoid_utils.utils import unpad_trajectories
 
 
 class ActorCriticRecurrent(ActorCritic):
