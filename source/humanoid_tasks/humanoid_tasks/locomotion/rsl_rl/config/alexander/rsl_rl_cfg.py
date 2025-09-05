@@ -41,8 +41,8 @@ class SceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",  # could also be "plane"
-        terrain_generator=booster_mdp.COBBLESTONE_ROAD_CFG,  # or none
-        max_init_terrain_level=booster_mdp.COBBLESTONE_ROAD_CFG.num_rows - 1,
+        terrain_generator=humanoid_mdp.COBBLESTONE_ROAD_CFG,  # or none
+        max_init_terrain_level=humanoid_mdp.COBBLESTONE_ROAD_CFG.num_rows - 1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -129,7 +129,7 @@ class CommandsCfg:
             lin_vel_x=(-1.0, 1.0), lin_vel_y=(-1.0, 1.0), ang_vel_z=(-1.0, 1.0),
         ),
     )
-    frequency = booster_mdp.FrequencyCommandCfg(
+    frequency = humanoid_mdp.FrequencyCommandCfg(
         sensor_cfg=SceneEntityCfg("contact_forces", body_names=".*_FOOT"),
         resampling_time_range=(6.0, 8.0),
         range=(2.0, 4.0),
@@ -178,12 +178,12 @@ class ObservationsCfg:
             clip=(-1.0, 1.0),
         )
         foot_force = ObsTerm(
-            func=booster_mdp.contact_sensor,
+            func=humanoid_mdp.contact_sensor,
             params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_FOOT")},
             # noise=Unoise(n_min=-5, n_max=5),
         )
         ground_friction = ObsTerm(
-            func=booster_mdp.contact_friction,
+            func=humanoid_mdp.contact_friction,
             params={"asset_cfg": SceneEntityCfg("robot", body_names=".*_FOOT")},
             noise=Unoise(n_min=-0.01, n_max=0.01)
         )
@@ -341,7 +341,7 @@ class EventCfg:
 
     # interval
     push_robot = EventTerm(
-        func=booster_mdp.push_by_adding_velocity,
+        func=humanoid_mdp.push_by_adding_velocity,
         mode="interval",
         interval_range_s=(10.0, 15.0),
         params={
@@ -362,17 +362,17 @@ class RewardsCfg:
 
     # -- task
     base_linear_velocity = RewTerm(
-        func=booster_mdp.base_linear_velocity_reward,
+        func=humanoid_mdp.base_linear_velocity_reward,
         weight=5.0,
         params={"std": 0.5, "ramp_rate": 0.5, "ramp_at_vel": 1.0, "asset_cfg": SceneEntityCfg("robot")},
     )
     base_angular_velocity = RewTerm(
-        func=booster_mdp.base_angular_velocity_reward,
+        func=humanoid_mdp.base_angular_velocity_reward,
         weight=5.0,
         params={"std":0.5, "asset_cfg": SceneEntityCfg("robot")},
     )
     air_time = RewTerm(
-        func=booster_mdp.air_time_reward_cmd_biped,
+        func=humanoid_mdp.air_time_reward_cmd_biped,
         weight=5.0,
         params={"sensor_cfg": SceneEntityCfg(
             "contact_forces",
@@ -381,7 +381,7 @@ class RewardsCfg:
         )},
     )
     foot_clearance = RewTerm(
-        func=booster_mdp.foot_clearance_reward,
+        func=humanoid_mdp.foot_clearance_reward,
         weight=0.5,
         params={
             "std": 0.025,
@@ -395,7 +395,7 @@ class RewardsCfg:
         },
     )
     gait = RewTerm(
-        func=booster_mdp.gait_reward_biped,
+        func=humanoid_mdp.gait_reward_biped,
         weight=5.0,
         params={
             "sensor_cfg": SceneEntityCfg(
@@ -409,7 +409,7 @@ class RewardsCfg:
         }
     )
     base_height = RewTerm(
-        func=booster_mdp.target_base_height,
+        func=humanoid_mdp.target_base_height,
         weight=1.0,
         params={
             "target_height": 0.68
@@ -417,10 +417,10 @@ class RewardsCfg:
     # alive = RewTerm(func=mdp.is_alive, weight=5.0)
 
     # -- penalties
-    angular_motion = RewTerm(func=booster_mdp.angular_motion_penalty, weight=-0.15)
-    base_orientation = RewTerm(func=booster_mdp.base_orientation_penalty, weight=-1.0)
+    angular_motion = RewTerm(func=humanoid_mdp.angular_motion_penalty, weight=-0.15)
+    base_orientation = RewTerm(func=humanoid_mdp.base_orientation_penalty, weight=-1.0)
     foot_slip = RewTerm(
-        func=booster_mdp.foot_slip_penalty,
+        func=humanoid_mdp.foot_slip_penalty,
         weight=-0.25,
         params={
             "asset_cfg": SceneEntityCfg(
@@ -436,9 +436,9 @@ class RewardsCfg:
             "threshold": 1.0,
         },
     )
-    action_smoothness = RewTerm(func=booster_mdp.action_smoothness_penalty, weight=-0.2)
+    action_smoothness = RewTerm(func=humanoid_mdp.action_smoothness_penalty, weight=-0.2)
     air_time_variance = RewTerm(
-        func=booster_mdp.air_time_variance_penalty,
+        func=humanoid_mdp.air_time_variance_penalty,
         weight=-1.0,
         params={"sensor_cfg": SceneEntityCfg(
             "contact_forces",
@@ -447,7 +447,7 @@ class RewardsCfg:
         )},
     )
     foot_impact = RewTerm(
-        func=booster_mdp.foot_impact_penalty, weight=-10.0, params={
+        func=humanoid_mdp.foot_impact_penalty, weight=-10.0, params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
                 body_names=".*_FOOT"
@@ -462,7 +462,7 @@ class RewardsCfg:
         }
     )
     joint_arm_pos = RewTerm(
-        func=booster_mdp.joint_position_penalty,
+        func=humanoid_mdp.joint_position_penalty,
         weight=-1.2,
         params={"asset_cfg": SceneEntityCfg(
             "robot",
@@ -470,7 +470,7 @@ class RewardsCfg:
         ), "stand_still_scale": 10.0},
     )
     joint_leg_pos = RewTerm(
-        func=booster_mdp.joint_position_penalty,
+        func=humanoid_mdp.joint_position_penalty,
         weight=-0.05,
         params={"asset_cfg": SceneEntityCfg(
             "robot",
@@ -479,7 +479,7 @@ class RewardsCfg:
     )
     # TODO make in terms of body wrt to ground, not joint angle
     # ankle_roll_joint_pos_penalty = RewTerm(
-    #     func=booster_mdp.joint_position_penalty,
+    #     func=humanoid_mdp.joint_position_penalty,
     #     weight=-1.0,
     #     params={"asset_cfg": SceneEntityCfg(
     #         "robot",
@@ -487,7 +487,7 @@ class RewardsCfg:
     #     ), "stand_still_scale": 10.0},
     # )
     joint_vel = RewTerm(
-        func=booster_mdp.joint_velocity_penalty,
+        func=humanoid_mdp.joint_velocity_penalty,
         weight=-1.0e-2,
         params={
             "asset_cfg": SceneEntityCfg(
@@ -498,7 +498,7 @@ class RewardsCfg:
         },
     )
     joint_acc = RewTerm(
-        func=booster_mdp.joint_acceleration_penalty,
+        func=humanoid_mdp.joint_acceleration_penalty,
         weight=-1.0e-4,
         params={
             "asset_cfg": SceneEntityCfg(
@@ -509,7 +509,7 @@ class RewardsCfg:
         },
     )
     ankle_joint_acc = RewTerm(
-        func=booster_mdp.joint_acceleration_penalty,
+        func=humanoid_mdp.joint_acceleration_penalty,
         weight=-1.0e-3,
         params={
             "asset_cfg": SceneEntityCfg(
@@ -519,7 +519,7 @@ class RewardsCfg:
         },
     )
     arm_joint_acc = RewTerm(
-        func=booster_mdp.joint_acceleration_penalty,
+        func=humanoid_mdp.joint_acceleration_penalty,
         weight=-1.0e-3,
         params={
             "asset_cfg": SceneEntityCfg(
@@ -529,7 +529,7 @@ class RewardsCfg:
         },
     )
     joint_torques = RewTerm(
-        func=booster_mdp.joint_torques_penalty,
+        func=humanoid_mdp.joint_torques_penalty,
         weight=-5.0e-4,
         params={"asset_cfg": SceneEntityCfg(
             "robot",
@@ -538,7 +538,7 @@ class RewardsCfg:
         )},
     )
     # joint_arm_torques = RewTerm(
-    #     func=booster_mdp.joint_torques_penalty,
+    #     func=humanoid_mdp.joint_torques_penalty,
     #     weight=-5.0e-3,
     #     params={"asset_cfg": SceneEntityCfg(
     #         "robot",
@@ -553,7 +553,7 @@ class RewardsCfg:
     #     )},
     # )
     foot_orientation = RewTerm(
-        func=booster_mdp.foot_orientation, weight=-15.0,
+        func=humanoid_mdp.foot_orientation, weight=-15.0,
         params={"asset_cfg": SceneEntityCfg(
             "robot",
             body_names=".*_FOOT"
@@ -561,7 +561,7 @@ class RewardsCfg:
         )}
     )
     foot_distance = RewTerm(
-        func=booster_mdp.foot_distance, weight=-10.0,
+        func=humanoid_mdp.foot_distance, weight=-10.0,
         params={"asset_cfg": SceneEntityCfg(
             "robot",
             body_names=".*_FOOT"
@@ -569,7 +569,7 @@ class RewardsCfg:
         ), "min_dist": 0.3}
     )
     # heel_toe_stepping_penalty = RewTerm(
-    #     func=booster_mdp.heel_toe_stepping_penalty, weight=-1.0,
+    #     func=humanoid_mdp.heel_toe_stepping_penalty, weight=-1.0,
     #     params={
     #         "asset_cfg": SceneEntityCfg("robot", body_names=["l[lr]6"]),
     #         "sensor_cfg": SceneEntityCfg(
@@ -605,7 +605,7 @@ class TerminationsCfg:
     #     ), "threshold": 1.0},
     # )
     left_foot_contact = DoneTerm(
-        func=booster_mdp.illegal_contact_filtered,
+        func=humanoid_mdp.illegal_contact_filtered,
         params={
             "threshold": 1.0,
             "sensor_cfg": SceneEntityCfg(
@@ -616,7 +616,7 @@ class TerminationsCfg:
         }
     )
     # right_foot_contact = DoneTerm(
-    #     func=booster_mdp.illegal_contact_filtered,
+    #     func=humanoid_mdp.illegal_contact_filtered,
     #     params={
     #         "threshold": 1.0,
     #         "sensor_cfg": SceneEntityCfg(
@@ -627,7 +627,7 @@ class TerminationsCfg:
     #     }
     # )
     terrain_out_of_bounds = DoneTerm(
-        func=booster_mdp.terrain_out_of_bounds,
+        func=humanoid_mdp.terrain_out_of_bounds,
         params={"asset_cfg": SceneEntityCfg("robot"), "distance_buffer": 3.0},
         time_out=True,
     )
@@ -638,7 +638,7 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    terrain_levels = CurrTerm(func=booster_mdp.terrain_levels_vel)
+    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
 
 
 ##
