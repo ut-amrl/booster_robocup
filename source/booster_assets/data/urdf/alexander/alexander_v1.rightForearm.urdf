@@ -1,0 +1,172 @@
+<?xml version = "1.0" ?>
+<robot name="Alexander">
+
+    <joint name="RIGHT_ELBOW_Y" type="revolute">
+        <origin rpy="0.0 0.0 0.0" xyz="0.015 0.0 -0.3127"/>
+        <axis xyz="0.0 1.0 0.0"/>
+        <parent link="RIGHT_SHOULDER_Z_LINK"/>
+        <child link="RIGHT_ELBOW_Y_LINK"/>
+        <limit effort="1000" lower="-2.35619" upper="0.174532925" velocity="100"/>
+        <dynamics damping="0.02" friction="0.0"/>
+    </joint>
+
+    <link name="RIGHT_ELBOW_Y_LINK">
+        <inertial>
+            <mass value="0.45"/>
+            <origin xyz="-0.0127 0.006913 -0.048421" rpy="0 0 0"/>
+            <inertia ixx="0.0006446" ixy="-0.0000073" ixz="-0.0000345" iyy="0.000625" iyz="-0.0001257" izz="0.0003922"/>
+        </inertial>
+        <visual>
+            <geometry>
+                <mesh filename="package://alexander_V1_description/meshes/cycloidal_arm/RightElbowPitchLink.obj"/>
+            </geometry>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        </visual>
+    </link>
+
+    <joint name="RIGHT_WRIST_Z" type="revolute">
+        <origin xyz="-0.015 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <axis xyz="0.0 0.0 1.0"/>
+        <parent link="RIGHT_ELBOW_Y_LINK"/>
+        <child link="RIGHT_WRIST_Z_LINK"/>
+        <limit effort="20.0" lower="-2.61799" upper="2.61799" velocity="25.0"/>
+        <dynamics damping="0.02" friction="0.0"/>
+    </joint>
+
+    <link name="RIGHT_WRIST_Z_LINK">
+        <inertial>
+            <mass value="1.547"/> <!-- This is a measured value. Refer to https://docs.google.com/spreadsheets/d/1VXWFJk3VJUsfkHrDaytB2INq94un1KytIOzcKJD0p44/edit?gid=0#gid=0  -->
+            <origin xyz="-0.002616 0.000462 -0.13019" rpy="0 0 0"/>
+            <inertia ixx="0.0037805" ixy="-0.0000177" ixz="-0.000025" iyy="0.0040639" iyz="0.00009" izz="0.0015151"/>
+        </inertial>
+        <visual>
+            <geometry>
+                <mesh filename="package://alexander_V1_description/meshes/cycloidal_arm/RightWristYawLink.obj"/>
+            </geometry>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        </visual>
+    </link>
+
+    <joint name="RIGHT_WRIST_X" type="revolute">
+        <origin xyz="0.0 0.013 -0.25" rpy="0.0 0.0 0.0"/>
+        <axis xyz="1 0 0"/>
+        <parent link="RIGHT_WRIST_Z_LINK"/>
+        <child link="RIGHT_WRIST_X_LINK"/>
+        <limit effort="20.0" lower="-0.610865" upper="1.8326" velocity="25.0"/>
+        <dynamics damping="0.02" friction="0.0"/>
+    </joint>
+
+    <link name="RIGHT_WRIST_X_LINK">
+        <inertial>
+            <mass value="0.909"/> <!-- This is a measured value. Refer to https://docs.google.com/spreadsheets/d/1VXWFJk3VJUsfkHrDaytB2INq94un1KytIOzcKJD0p44/edit?gid=0#gid=0  -->
+            <origin xyz="-0.0000481 -0.012143 0.000196" rpy="0 0 0"/>
+            <inertia ixx="0.0005535" ixy="0.0000081" ixz="-0.0000231" iyy="0.0005559" iyz="0.0000012" izz="0.0005893"/>
+        </inertial>
+        <visual>
+            <geometry>
+                <mesh filename="package://alexander_V1_description/meshes/cycloidal_arm/RightWristRollLink.obj"/>
+            </geometry>
+            <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+        </visual>
+    </link>
+
+    <joint name="RIGHT_GRIPPER_Z" type="revolute">
+        <origin xyz="0.0 -0.013 -0.031" rpy="0.0 0.0 0.0"/>
+        <axis xyz="0.0 0.0 1.0"/>
+        <parent link="RIGHT_WRIST_X_LINK"/>
+        <child link="RIGHT_GRIPPER_Z_LINK"/>
+        <limit effort="20.0" lower="-2.61799" upper="2.61799" velocity="25.0"/>
+        <dynamics damping="0.02" friction="0.0"/>
+    </joint>
+
+    <link name="RIGHT_GRIPPER_Z_LINK">
+        <inertial>
+            <mass value="0.251"/>
+            <origin rpy="0 0 0" xyz="-0.000217 -0.000349 0.009761"/>
+            <inertia ixx="0.0000722" ixy="-0.0000016" ixz="-0.0000037" iyy="0.0000747" iyz="0.0000004" izz="0.0000324"/>
+        </inertial>
+        <visual>
+            <geometry>
+                <mesh filename="package://alexander_V1_description/meshes/cycloidal_arm/nub.obj"/>
+            </geometry>
+            <origin rpy="0.0 1.57 0.0" xyz="0.0 0.0 0.0"/>
+        </visual>
+    </link>
+
+    <!-- Right Forearm IMUs -->
+    <joint name="RIGHT_WRIST_Z_IMU_JOINT" type="fixed">
+        <origin rpy="1.571  0.0 1.571" xyz="-0.033554 0.010450 -0.148527"/>
+        <axis xyz="0 0 1"/>
+        <parent link="RIGHT_WRIST_Z_LINK"/>
+        <child link="RIGHT_WRIST_Z_IMU_LINK"/>
+    </joint>
+
+    <link name="RIGHT_WRIST_Z_IMU_LINK">
+        <inertial>
+            <mass value="0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <gazebo reference="RIGHT_WRIST_Z_IMU_LINK">
+        <sensor name="right_wrist_z_imu" type="imu">
+            <always_on>true</always_on>
+            <imu>
+                <noise>
+                    <type>gaussian</type>
+                    <rate>
+                        <mean>0</mean>
+                        <stddev>0.0002</stddev>
+                        <bias_mean>7.5e-06</bias_mean>
+                        <bias_stddev>8e-07</bias_stddev>
+                    </rate>
+                    <accel>
+                        <mean>0</mean>
+                        <stddev>0.017</stddev>
+                        <bias_mean>0.1</bias_mean>
+                        <bias_stddev>0.001</bias_stddev>
+                    </accel>
+                </noise>
+            </imu>
+        </sensor>
+    </gazebo>
+
+    <joint name="RIGHT_GRIPPER_Z_IMU_JOINT" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <axis xyz="0 0 1"/>
+        <parent link="RIGHT_GRIPPER_Z_LINK"/>
+        <child link="RIGHT_GRIPPER_Z_IMU_LINK"/>
+    </joint>
+
+    <link name="RIGHT_GRIPPER_Z_IMU_LINK">
+        <inertial>
+            <mass value="0"/>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+        </inertial>
+    </link>
+
+    <gazebo reference="RIGHT_GRIPPER_Z_IMU_LINK">
+        <sensor name="right_gripper_z_imu" type="imu">
+            <always_on>true</always_on>
+            <imu>
+                <noise>
+                    <type>gaussian</type>
+                    <rate>
+                        <mean>0</mean>
+                        <stddev>0.0002</stddev>
+                        <bias_mean>7.5e-06</bias_mean>
+                        <bias_stddev>8e-07</bias_stddev>
+                    </rate>
+                    <accel>
+                        <mean>0</mean>
+                        <stddev>0.017</stddev>
+                        <bias_mean>0.1</bias_mean>
+                        <bias_stddev>0.001</bias_stddev>
+                    </accel>
+                </noise>
+            </imu>
+        </sensor>
+    </gazebo>
+</robot>

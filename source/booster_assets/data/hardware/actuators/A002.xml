@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<CycloidParameters>
+    <physicalParameters>
+        <kt>0.19</kt> <!-- KT from validation 0.21 -->
+        <gearRatio>18.95528987</gearRatio>
+        <inputResolution>17</inputResolution>
+        <outputResolution>17</outputResolution>
+    </physicalParameters>
+    <silParameters>
+        <frictionGain>0.03</frictionGain>
+        <frictionSlope>100</frictionSlope>
+        <dampingGain>0.0007</dampingGain>
+        <dampingScalar>0.0</dampingScalar>
+    </silParameters>
+</CycloidParameters>

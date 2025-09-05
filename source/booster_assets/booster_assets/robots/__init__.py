@@ -8,3 +8,4 @@
 ##
 
 from .booster import *
+from .ihmc import *
