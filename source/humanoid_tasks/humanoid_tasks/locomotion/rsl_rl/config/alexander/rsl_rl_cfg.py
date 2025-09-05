@@ -24,8 +24,8 @@ from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
 
 
 import isaaclab.envs.mdp as mdp
-import booster_mdp
-from booster_assets import ALEXANDER_CFG
+import humanoid_mdp
+from humanoid_assets import ALEXANDER_CFG
 
 
 ##
