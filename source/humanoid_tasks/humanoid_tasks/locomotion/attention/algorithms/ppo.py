@@ -7,8 +7,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from booster_rl.modules import ActorCritic
-from booster_rl.storage import RolloutStorage
+from humanoid_rl.modules import ActorCritic
+from humanoid_rl.storage import RolloutStorage
 
 
 class PPO:

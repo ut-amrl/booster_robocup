@@ -23,13 +23,13 @@ from rsl_rl.modules import (
 )
 from rsl_rl.utils import store_code_state
 
-from booster_rl.algorithms import PPO
-from booster_rl.env import VecEnv
-from booster_rl.modules import EmpiricalNormalization
-from booster_tasks.locomotion.attention.modules.attention_module import (
+from humanoid_rl.algorithms import PPO
+from humanoid_rl.env import VecEnv
+from humanoid_rl.modules import EmpiricalNormalization
+from humanoid_tasks.locomotion.attention.modules.attention_module import (
     AttentionModule,
 )
-from booster_utils.utils import store_code_state
+from humanoid_utils.utils import store_code_state
 
 class AttentionPolicyRunner:
     """On-policy runner for training and evaluation."""

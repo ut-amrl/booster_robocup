@@ -7,7 +7,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
-from booster_rl.modules import ActorCritic
+from humanoid_rl.modules import ActorCritic
 
 class AttentionModule(ActorCritic):
     is_recurrent = False
