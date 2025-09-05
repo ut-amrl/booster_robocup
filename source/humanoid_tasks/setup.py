@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Installation script for the 'booster_rl' python package."""
+"""Installation script for the 'isaaclab_tasks' python package."""
 
-import itertools
 import os
 import toml
 
@@ -25,39 +24,15 @@ INSTALL_REQUIRES = [
     # 5.26.0 introduced a breaking change, so we restricted it for now.
     # See issue https://github.com/tensorflow/tensorboard/issues/6808 for details.
     "protobuf>=3.20.2, < 5.0.0",
-    # configuration management
-    "hydra-core",
-    # data collection
-    "h5py",
     # basic logger
     "tensorboard",
-    # video recording
-    "moviepy",
-    # make sure this is consistent with isaac sim version
-    "pillow==11.0.0",
 ]
 
 PYTORCH_INDEX_URL = ["https://download.pytorch.org/whl/cu118"]
 
-# Extra dependencies for RL agents
-EXTRAS_REQUIRE = {
-    "sb3": ["stable-baselines3>=2.1"],
-    "skrl": ["skrl>=1.4.1"],
-    "rl-games": ["rl-games==1.6.1", "gym"],  # rl-games still needs gym :(
-    "rsl-rl": ["rsl-rl@git+https://github.com/leggedrobotics/rsl_rl.git"],
-}
-# Add the names with hyphens as aliases for convenience
-EXTRAS_REQUIRE["rl_games"] = EXTRAS_REQUIRE["rl-games"]
-EXTRAS_REQUIRE["rsl_rl"] = EXTRAS_REQUIRE["rsl-rl"]
-
-# Cumulation of all extra-requires
-EXTRAS_REQUIRE["all"] = list(itertools.chain.from_iterable(EXTRAS_REQUIRE.values()))
-# Remove duplicates in the all list to avoid double installations
-EXTRAS_REQUIRE["all"] = list(set(EXTRAS_REQUIRE["all"]))
-
 # Installation operation
 setup(
-    name="booster_rl",
+    name="humanoid_tasks",
     author="Autonomous Mobile Robotics Lab Project Developers",
     maintainer="Autonomous Mobile Robotics Lab Project Developers",
     url=EXTENSION_TOML_DATA["package"]["repository"],
@@ -68,8 +43,7 @@ setup(
     python_requires=">=3.10",
     install_requires=INSTALL_REQUIRES,
     dependency_links=PYTORCH_INDEX_URL,
-    extras_require=EXTRAS_REQUIRE,
-    packages=["booster_rl"],
+    packages=["humanoid_tasks"],
     classifiers=[
         "Natural Language :: English",
         "Programming Language :: Python :: 3.10",

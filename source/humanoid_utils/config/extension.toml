@@ -4,16 +4,16 @@
 version = "0.10.22"
 
 # Description
-title = "Booster IsaacLab Tasks"
-description="Extension containing suite of environments for robot learning."
+title = "Humanoid Utils"
+description="Extension containing suite of utilities for robot learning."
 readme  = "docs/README.md"
 repository = "https://github.com/isaac-sim/IsaacLab"
 category = "robotics"
-keywords = ["robotics", "rl", "il", "learning", "booster"]
+keywords = ["robotics", "rl", "il", "learning"]
 
 [dependencies]
 "isaaclab" = {}
 "isaaclab_assets" = {}
 
 [[python.module]]
-name = "booster_tasks"
+name = "humanoid_utils"

@@ -17,7 +17,7 @@ EXTENSION_TOML_DATA = toml.load(os.path.join(EXTENSION_PATH, "config", "extensio
 
 # Installation operation
 setup(
-    name="booster_assets",
+    name="humanoid_assets",
     author="Autonomous Mobile Robotics Lab Project Developers",
     maintainer="Autonomous Mobile Robotics Lab Project Developers",
     url=EXTENSION_TOML_DATA["package"]["repository"],
@@ -26,7 +26,7 @@ setup(
     keywords=EXTENSION_TOML_DATA["package"]["keywords"],
     include_package_data=True,
     python_requires=">=3.10",
-    packages=["booster_assets"],
+    packages=["humanoid_assets"],
     classifiers=[
         "Natural Language :: English",
         "Programming Language :: Python :: 3.10",

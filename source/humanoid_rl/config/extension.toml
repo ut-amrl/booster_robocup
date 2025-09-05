@@ -4,7 +4,7 @@
 version = "0.1.0"
 
 # Description
-title = "Booster RL"
+title = "Humanoid RL"
 description="Extension containing collection of wrappers for reinforcement learning."
 readme  = "docs/README.md"
 repository = "https://github.com/isaac-sim/IsaacLab"
@@ -17,4 +17,4 @@ keywords = ["robotics", "rl", "wrappers", "learning"]
 "isaaclab_tasks" = {}
 
 [[python.module]]
-name = "booster_rl"
+name = "humanoid_rl"

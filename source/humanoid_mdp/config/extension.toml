@@ -3,7 +3,7 @@
 version = "0.2.1"
 
 # Description
-title =  "Booster MDP"
+title =  "Humanoid MDP"
 description="Extension containing configuration instances of different mdp objects"
 readme  = "docs/README.md"
 repository = "https://github.com/isaac-sim/IsaacLab"
@@ -15,4 +15,4 @@ keywords = ["kit", "robotics", "assets", "isaaclab"]
 
 # Main python module this extension provides.
 [[python.module]]
-name = "booster_mdp"
+name = "humanoid_mdp"

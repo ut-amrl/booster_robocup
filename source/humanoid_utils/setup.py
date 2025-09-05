@@ -32,7 +32,7 @@ PYTORCH_INDEX_URL = ["https://download.pytorch.org/whl/cu118"]
 
 # Installation operation
 setup(
-    name="booster_utils",
+    name="humanoid_utils",
     author="Autonomous Mobile Robotics Lab Project Developers",
     maintainer="Autonomous Mobile Robotics Lab Project Developers",
     url=EXTENSION_TOML_DATA["package"]["repository"],
@@ -43,7 +43,7 @@ setup(
     python_requires=">=3.10",
     install_requires=INSTALL_REQUIRES,
     dependency_links=PYTORCH_INDEX_URL,
-    packages=["booster_utils"],
+    packages=["humanoid_utils"],
     classifiers=[
         "Natural Language :: English",
         "Programming Language :: Python :: 3.10",
