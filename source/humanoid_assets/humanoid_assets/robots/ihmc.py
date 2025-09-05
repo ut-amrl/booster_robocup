@@ -162,6 +162,15 @@ ALEXANDER_CFG = ArticulationCfg(
             effort_limit=24.0,
             velocity_limit=50.0,
         ),
+        "legs6": ActuatorCfg(
+            joint_names_expr=[".*_ANKLE_Y"],
+            stiffness=50 if STIFF else 10,
+            damping=1 if STIFF else 3,
+            # effort_limit_sim=24.0,
+            # velocity_limit_sim=50.0,
+            effort_limit=24.0,
+            velocity_limit=50.0,
+        ),
     }, # type: ignore
 )
 """Configuration for the Booster T1 Humanoid robot."""
