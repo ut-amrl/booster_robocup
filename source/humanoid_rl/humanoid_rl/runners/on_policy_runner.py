@@ -332,6 +332,10 @@ class OnPolicyRunner:
         self.writer.add_scalar("Perf/collection time", locs["collection_time"], locs["it"])
         self.writer.add_scalar("Perf/learning_time", locs["learn_time"], locs["it"])
 
+        # callback for video logging
+        if self.logger_type in ["wandb"]:
+            self.writer.callback(locs["it"])
+
         # -- Training
         if len(locs["rewbuffer"]) > 0:
             # separate logging for intrinsic and extrinsic rewards

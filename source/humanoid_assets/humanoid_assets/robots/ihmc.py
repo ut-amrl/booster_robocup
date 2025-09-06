@@ -12,7 +12,7 @@ EXT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 # Configuration
 ##
 ActuatorCfg = IdealPDActuatorCfg
-STIFF = False
+STIFF = True
 
 ALEXANDER_CFG = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Robot",
