@@ -199,35 +199,35 @@
         <material name="black" rgba="0 0 0 1"/>
         <material name="white" rgba="1 1 1 1"/>
         <material name="gray" rgba="0.671705 0.692426 0.774270 1"/>
-        <mesh name="left_ankle" file="legs/AnklePitchLink.obj"/>
-        <mesh name="left_foot" file="legs/Foot.obj"/>
-        <mesh name="left_hip_x" file="legs/LeftHipRollLink.obj"/>
-        <mesh name="left_hip_z" file="legs/LeftHipYawLink.obj"/>
-        <mesh name="left_shin" file="legs/LeftShin.obj"/>
-        <mesh name="left_thigh" file="legs/LeftThigh.obj"/>
-        <mesh name="pelvis" file="legs/Pelvis.obj"/>
-        <mesh name="right_ankle" file="legs/AnklePitchLink.obj"/>
-        <mesh name="right_foot" file="legs/Foot.obj"/>
-        <mesh name="right_hip_x" file="legs/RightHipRollLink.obj"/>
-        <mesh name="right_hip_z" file="legs/RightHipYawLink.obj"/>
-        <mesh name="right_shin" file="legs/RightShin.obj"/>
-        <mesh name="right_thigh" file="legs/RightThigh.obj"/>
-        <mesh name="head" file="ALX02_01_A02_HeadLink.obj"/>
-        <mesh name="torso" file="torso.obj"/>
-        <mesh name="left_shoulder_y" file="cycloidal_arm/LeftShoulderPitchLink.obj"/>
-        <mesh name="left_shoulder_x" file="cycloidal_arm/LeftShoulderRollLink_shortBicep.obj"/>
-        <mesh name="left_shoulder_z" file="cycloidal_arm/LeftShoulderYawLink.obj"/>
-        <mesh name="left_elbow_y" file="cycloidal_arm/LeftElbowPitchLink.obj"/>
-        <mesh name="left_wrist_z" file="cycloidal_arm/LeftWristYawLink.obj"/>
-        <mesh name="left_wrist_x" file="cycloidal_arm/LeftWristRollLink.obj"/>
-        <mesh name="left_gripper" file="cycloidal_arm/nub.obj" inertia="convex"/>
-        <mesh name="right_shoulder_y" file="cycloidal_arm/RightShoulderPitchLink.obj"/>
-        <mesh name="right_shoulder_x" file="cycloidal_arm/RightShoulderRollLink_shortBicep.obj"/>
-        <mesh name="right_shoulder_z" file="cycloidal_arm/RightShoulderYawLink.obj"/>
-        <mesh name="right_elbow_y" file="cycloidal_arm/RightElbowPitchLink.obj"/>
-        <mesh name="right_wrist_z" file="cycloidal_arm/RightWristYawLink.obj"/>
-        <mesh name="right_wrist_x" file="cycloidal_arm/RightWristRollLink.obj"/>
-        <mesh name="right_gripper" file="cycloidal_arm/nub.obj" inertia="convex"/>
+        <mesh name="left_ankle" file="../../meshes/legs/AnklePitchLink.obj"/>
+        <mesh name="left_foot" file="../../meshes/legs/Foot.obj"/>
+        <mesh name="left_hip_x" file="../../meshes/legs/LeftHipRollLink.obj"/>
+        <mesh name="left_hip_z" file="../../meshes/legs/LeftHipYawLink.obj"/>
+        <mesh name="left_shin" file="../../meshes/legs/LeftShin.obj"/>
+        <mesh name="left_thigh" file="../../meshes/legs/LeftThigh.obj"/>
+        <mesh name="pelvis" file="../../meshes/legs/Pelvis.obj"/>
+        <mesh name="right_ankle" file="../../meshes/legs/AnklePitchLink.obj"/>
+        <mesh name="right_foot" file="../../meshes/legs/Foot.obj"/>
+        <mesh name="right_hip_x" file="../../meshes/legs/RightHipRollLink.obj"/>
+        <mesh name="right_hip_z" file="../../meshes/legs/RightHipYawLink.obj"/>
+        <mesh name="right_shin" file="../../meshes/legs/RightShin.obj"/>
+        <mesh name="right_thigh" file="../../meshes/legs/RightThigh.obj"/>
+        <mesh name="head" file="../../meshes/ALX02_01_A02_HeadLink.obj"/>
+        <mesh name="torso" file="../../meshes/torso.obj"/>
+        <mesh name="left_shoulder_y" file="../../meshes/cycloidal_arm/LeftShoulderPitchLink.obj"/>
+        <mesh name="left_shoulder_x" file="../../meshes/cycloidal_arm/LeftShoulderRollLink_shortBicep.obj"/>
+        <mesh name="left_shoulder_z" file="../../meshes/cycloidal_arm/LeftShoulderYawLink.obj"/>
+        <mesh name="left_elbow_y" file="../../meshes/cycloidal_arm/LeftElbowPitchLink.obj"/>
+        <mesh name="left_wrist_z" file="../../meshes/cycloidal_arm/LeftWristYawLink.obj"/>
+        <mesh name="left_wrist_x" file="../../meshes/cycloidal_arm/LeftWristRollLink.obj"/>
+        <mesh name="left_gripper" file="../../meshes/cycloidal_arm/nub.obj" inertia="convex"/>
+        <mesh name="right_shoulder_y" file="../../meshes/cycloidal_arm/RightShoulderPitchLink.obj"/>
+        <mesh name="right_shoulder_x" file="../../meshes/cycloidal_arm/RightShoulderRollLink_shortBicep.obj"/>
+        <mesh name="right_shoulder_z" file="../../meshes/cycloidal_arm/RightShoulderYawLink.obj"/>
+        <mesh name="right_elbow_y" file="../../meshes/cycloidal_arm/RightElbowPitchLink.obj"/>
+        <mesh name="right_wrist_z" file="../../meshes/cycloidal_arm/RightWristYawLink.obj"/>
+        <mesh name="right_wrist_x" file="../../meshes/cycloidal_arm/RightWristRollLink.obj"/>
+        <mesh name="right_gripper" file="../../meshes/cycloidal_arm/nub.obj" inertia="convex"/>
     </asset>
 
     <worldbody>
