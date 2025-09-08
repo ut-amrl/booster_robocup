@@ -79,7 +79,7 @@ import torch
 from datetime import datetime
 
 import omni
-from humanoid_rl.runners import OnPolicyRunner
+from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
 from isaaclab.envs import (
     DirectMARLEnv,

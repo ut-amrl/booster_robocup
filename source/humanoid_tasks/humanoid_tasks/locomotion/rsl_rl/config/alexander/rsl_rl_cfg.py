@@ -40,9 +40,9 @@ class SceneCfg(InteractiveSceneCfg):
     # ground terrain
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",  # could also be "plane"
-        terrain_generator=humanoid_mdp.COBBLESTONE_ROAD_CFG,  # or none
-        max_init_terrain_level=humanoid_mdp.COBBLESTONE_ROAD_CFG.num_rows - 1,
+        terrain_type="plane",
+        terrain_generator=None,
+        max_init_terrain_level=None,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
@@ -50,12 +50,8 @@ class SceneCfg(InteractiveSceneCfg):
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
-        visual_material=sim_utils.MdlFileCfg(
-            mdl_path=f"{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl",
-            project_uvw=True,
-            texture_scale=(0.25, 0.25),
-        ),
-        debug_vis=False,  # show origin of each environment
+        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.2, 0.2, 0.2)),
+        debug_vis=False,
     )
     # robots
     robot: ArticulationCfg = ALEXANDER_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
@@ -638,8 +634,8 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
-
+    # terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
+    pass
 
 ##
 # Environment configuration
@@ -650,11 +646,7 @@ class AlexanderBaselineCfg(ManagerBasedRLEnvCfg):
     """Configuration for the locomotion velocity-tracking environment."""
 
     # Viewer
-    viewer = ViewerCfg(eye=(12.5, 12.5, 10.5), 
-                        #    lookat=(50.0, 0.0, 0.0),
-                        origin_type="env", 
-                        env_index=0,
-                        asset_name="robot")    # Scene settings
+    viewer = ViewerCfg(eye=(2.8, -0.5, 0.7), origin_type="asset_root", env_index=0, asset_name="robot")
     scene: SceneCfg = SceneCfg(num_envs=4096, env_spacing=5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
