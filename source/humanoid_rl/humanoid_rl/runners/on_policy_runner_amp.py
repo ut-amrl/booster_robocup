@@ -1,7 +1,5 @@
-# Copyright (c) 2021-2025, ETH Zurich and NVIDIA CORPORATION
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
+#  Copyright 2021 ETH Zurich, NVIDIA CORPORATION
+#  SPDX-License-Identifier: BSD-3-Clause
 
 from __future__ import annotations
 
@@ -12,26 +10,19 @@ import torch
 from collections import deque
 
 import rsl_rl
-from rsl_rl.algorithms import PPO, Distillation
-from rsl_rl.env import VecEnv
-from rsl_rl.modules import (
+from humanoid_rl.algorithms import PPO, Distillation
+from humanoid_rl.env import VecEnv
+from humanoid_rl.modules import (
     ActorCritic,
     ActorCriticRecurrent,
     EmpiricalNormalization,
     StudentTeacher,
     StudentTeacherRecurrent,
 )
-from rsl_rl.utils import store_code_state
-
-from humanoid_rl.algorithms import PPO
-from humanoid_rl.env import VecEnv
-from humanoid_rl.modules import EmpiricalNormalization
-from humanoid_tasks.locomotion.attention.modules.attention_module import (
-    AttentionModule,
-)
 from humanoid_utils.utils import store_code_state
 
-class AttentionPolicyRunner:
+
+class OnPolicyRunner:
     """On-policy runner for training and evaluation."""
 
     def __init__(self, env: VecEnv, train_cfg: dict, log_dir: str | None = None, device="cpu"):
@@ -47,8 +38,6 @@ class AttentionPolicyRunner:
         # resolve training type depending on the algorithm
         if self.alg_cfg["class_name"] == "PPO":
             self.training_type = "rl"
-        elif self.alg_cfg["class_name"] == "Distillation":
-            self.training_type = "distillation"
         else:
             raise ValueError(f"Training type not found for algorithm {self.alg_cfg['class_name']}.")
 
@@ -62,11 +51,6 @@ class AttentionPolicyRunner:
                 self.privileged_obs_type = "critic"  # actor-critic reinforcement learnig, e.g., PPO
             else:
                 self.privileged_obs_type = None
-        if self.training_type == "distillation":
-            if "teacher" in extras["observations"]:
-                self.privileged_obs_type = "teacher"  # policy distillation
-            else:
-                self.privileged_obs_type = None
 
         # resolve dimensions of privileged observations
         if self.privileged_obs_type is not None:
@@ -76,27 +60,9 @@ class AttentionPolicyRunner:
 
         # evaluate the policy class
         policy_class = eval(self.policy_cfg.pop("class_name"))
-        policy: AttentionModule = policy_class(
+        policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent = policy_class(
             num_obs, num_privileged_obs, self.env.num_actions, **self.policy_cfg
         ).to(self.device)
-
-        # resolve dimension of rnd gated state
-        if "rnd_cfg" in self.alg_cfg and self.alg_cfg["rnd_cfg"] is not None:
-            # check if rnd gated state is present
-            rnd_state = extras["observations"].get("rnd_state")
-            if rnd_state is None:
-                raise ValueError("Observations for the key 'rnd_state' not found in infos['observations'].")
-            # get dimension of rnd gated state
-            num_rnd_state = rnd_state.shape[1]
-            # add rnd gated state to config
-            self.alg_cfg["rnd_cfg"]["num_states"] = num_rnd_state
-            # scale down the rnd weight with timestep (similar to how rewards are scaled down in legged_gym envs)
-            self.alg_cfg["rnd_cfg"]["weight"] *= env.unwrapped.step_dt
-
-        # if using symmetry then pass the environment config object
-        if "symmetry_cfg" in self.alg_cfg and self.alg_cfg["symmetry_cfg"] is not None:
-            # this is used by the symmetry function for handling different observation terms
-            self.alg_cfg["symmetry_cfg"]["_env"] = env
 
         # initialize algorithm
         alg_class = eval(self.alg_cfg.pop("class_name"))
@@ -146,12 +112,12 @@ class AttentionPolicyRunner:
             self.logger_type = self.logger_type.lower()
 
             if self.logger_type == "neptune":
-                from rsl_rl.utils.neptune_utils import NeptuneSummaryWriter
+                from humanoid_utils.neptune_utils import NeptuneSummaryWriter
 
                 self.writer = NeptuneSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
             elif self.logger_type == "wandb":
-                from rsl_rl.utils.wandb_utils import WandbSummaryWriter
+                from humanoid_utils.wandb_utils import WandbSummaryWriter
 
                 self.writer = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
                 self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
@@ -161,10 +127,6 @@ class AttentionPolicyRunner:
                 self.writer = SummaryWriter(log_dir=self.log_dir, flush_secs=10)
             else:
                 raise ValueError("Logger type not found. Please choose 'neptune', 'wandb' or 'tensorboard'.")
-
-        # check if teacher is loaded
-        if self.training_type == "distillation" and not self.alg.policy.loaded_teacher:
-            raise ValueError("Teacher model parameters not loaded. Please load a teacher model to distill.")
 
         # randomize initial episode lengths (for exploration)
         if init_at_random_ep_len:
@@ -184,13 +146,6 @@ class AttentionPolicyRunner:
         lenbuffer = deque(maxlen=100)
         cur_reward_sum = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
         cur_episode_length = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
-
-        # create buffers for logging extrinsic and intrinsic rewards
-        if self.alg.rnd:
-            erewbuffer = deque(maxlen=100)
-            irewbuffer = deque(maxlen=100)
-            cur_ereward_sum = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
-            cur_ireward_sum = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
 
         # Ensure all parameters are in-synced
         if self.is_distributed:
@@ -225,22 +180,13 @@ class AttentionPolicyRunner:
                     # process the step
                     self.alg.process_env_step(rewards, dones, infos)
 
-                    # Extract intrinsic rewards (only for logging)
-                    intrinsic_rewards = self.alg.intrinsic_rewards if self.alg.rnd else None
-
                     # book keeping
                     if self.log_dir is not None:
                         if "episode" in infos:
                             ep_infos.append(infos["episode"])
                         elif "log" in infos:
                             ep_infos.append(infos["log"])
-                        # Update rewards
-                        if self.alg.rnd:
-                            cur_ereward_sum += rewards
-                            cur_ireward_sum += intrinsic_rewards  # type: ignore
-                            cur_reward_sum += rewards + intrinsic_rewards
-                        else:
-                            cur_reward_sum += rewards
+                        cur_reward_sum += rewards
                         # Update episode length
                         cur_episode_length += 1
                         # Clear data for completed episodes
@@ -250,12 +196,6 @@ class AttentionPolicyRunner:
                         lenbuffer.extend(cur_episode_length[new_ids][:, 0].cpu().numpy().tolist())
                         cur_reward_sum[new_ids] = 0
                         cur_episode_length[new_ids] = 0
-                        # -- intrinsic and extrinsic rewards
-                        if self.alg.rnd:
-                            erewbuffer.extend(cur_ereward_sum[new_ids][:, 0].cpu().numpy().tolist())
-                            irewbuffer.extend(cur_ireward_sum[new_ids][:, 0].cpu().numpy().tolist())
-                            cur_ereward_sum[new_ids] = 0
-                            cur_ireward_sum[new_ids] = 0
 
                 stop = time.time()
                 collection_time = stop - start
@@ -341,14 +281,12 @@ class AttentionPolicyRunner:
         self.writer.add_scalar("Perf/collection time", locs["collection_time"], locs["it"])
         self.writer.add_scalar("Perf/learning_time", locs["learn_time"], locs["it"])
 
+        # callback for video logging
+        if self.logger_type in ["wandb"]:
+            self.writer.callback(locs["it"])
+
         # -- Training
         if len(locs["rewbuffer"]) > 0:
-            # separate logging for intrinsic and extrinsic rewards
-            if self.alg.rnd:
-                self.writer.add_scalar("Rnd/mean_extrinsic_reward", statistics.mean(locs["erewbuffer"]), locs["it"])
-                self.writer.add_scalar("Rnd/mean_intrinsic_reward", statistics.mean(locs["irewbuffer"]), locs["it"])
-                self.writer.add_scalar("Rnd/weight", self.alg.rnd.weight, locs["it"])
-            # everything else
             self.writer.add_scalar("Train/mean_reward", statistics.mean(locs["rewbuffer"]), locs["it"])
             self.writer.add_scalar("Train/mean_episode_length", statistics.mean(locs["lenbuffer"]), locs["it"])
             if self.logger_type != "wandb":  # wandb does not support non-integer x-axis logging
@@ -371,11 +309,6 @@ class AttentionPolicyRunner:
             for key, value in locs["loss_dict"].items():
                 log_string += f"""{f'Mean {key} loss:':>{pad}} {value:.4f}\n"""
             # -- Rewards
-            if self.alg.rnd:
-                log_string += (
-                    f"""{'Mean extrinsic reward:':>{pad}} {statistics.mean(locs['erewbuffer']):.2f}\n"""
-                    f"""{'Mean intrinsic reward:':>{pad}} {statistics.mean(locs['irewbuffer']):.2f}\n"""
-                )
             log_string += f"""{'Mean reward:':>{pad}} {statistics.mean(locs['rewbuffer']):.2f}\n"""
             # -- episode info
             log_string += f"""{'Mean episode length:':>{pad}} {statistics.mean(locs['lenbuffer']):.2f}\n"""
@@ -414,10 +347,6 @@ class AttentionPolicyRunner:
             "iter": self.current_learning_iteration,
             "infos": infos,
         }
-        # -- Save RND model if used
-        if self.alg.rnd:
-            saved_dict["rnd_state_dict"] = self.alg.rnd.state_dict()
-            saved_dict["rnd_optimizer_state_dict"] = self.alg.rnd_optimizer.state_dict()
         # -- Save observation normalizer if used
         if self.empirical_normalization:
             saved_dict["obs_norm_state_dict"] = self.obs_normalizer.state_dict()
@@ -434,9 +363,6 @@ class AttentionPolicyRunner:
         loaded_dict = torch.load(path, weights_only=False)
         # -- Load model
         resumed_training = self.alg.policy.load_state_dict(loaded_dict["model_state_dict"])
-        # -- Load RND model if used
-        if self.alg.rnd:
-            self.alg.rnd.load_state_dict(loaded_dict["rnd_state_dict"])
         # -- Load observation normalizer if used
         if self.empirical_normalization:
             if resumed_training:
@@ -453,9 +379,6 @@ class AttentionPolicyRunner:
         if load_optimizer and resumed_training:
             # -- algorithm optimizer
             self.alg.optimizer.load_state_dict(loaded_dict["optimizer_state_dict"])
-            # -- RND optimizer if used
-            if self.alg.rnd:
-                self.alg.rnd_optimizer.load_state_dict(loaded_dict["rnd_optimizer_state_dict"])
         # -- load current learning iteration
         if resumed_training:
             self.current_learning_iteration = loaded_dict["iter"]
@@ -475,9 +398,6 @@ class AttentionPolicyRunner:
     def train_mode(self):
         # -- PPO
         self.alg.policy.train()
-        # -- RND
-        if self.alg.rnd:
-            self.alg.rnd.train()
         # -- Normalization
         if self.empirical_normalization:
             self.obs_normalizer.train()
@@ -486,9 +406,6 @@ class AttentionPolicyRunner:
     def eval_mode(self):
         # -- PPO
         self.alg.policy.eval()
-        # -- RND
-        if self.alg.rnd:
-            self.alg.rnd.eval()
         # -- Normalization
         if self.empirical_normalization:
             self.obs_normalizer.eval()
