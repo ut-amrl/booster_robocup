@@ -1,5 +1,7 @@
-#  Copyright 2021 ETH Zurich, NVIDIA CORPORATION
-#  SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2021-2025, ETH Zurich and NVIDIA CORPORATION
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 from __future__ import annotations
 
@@ -7,23 +9,18 @@ import os
 import statistics
 import time
 import torch
+import warnings
 from collections import deque
 
 import rsl_rl
-from humanoid_rl.algorithms import PPO, Distillation
-from humanoid_rl.env import VecEnv
-from humanoid_rl.modules import (
-    ActorCritic,
-    ActorCriticRecurrent,
-    EmpiricalNormalization,
-    StudentTeacher,
-    StudentTeacherRecurrent,
-)
-from humanoid_utils.utils import store_code_state
+from rsl_rl.algorithms import PPO
+from rsl_rl.env import VecEnv
+from rsl_rl.modules import ActorCritic, ActorCriticRecurrent, resolve_rnd_config, resolve_symmetry_config
+from rsl_rl.utils import resolve_obs_groups, store_code_state
 
 
 class OnPolicyRunner:
-    """On-policy runner for training and evaluation."""
+    """On-policy runner for training and evaluation of actor-critic methods."""
 
     def __init__(
         self, env: VecEnv, train_cfg: dict, log_dir: str | None = None, device="cpu"
@@ -144,6 +141,7 @@ class OnPolicyRunner:
         # Decide whether to disable logging
         # We only log from the process with rank 0 (main process)
         self.disable_logs = self.is_distributed and self.gpu_global_rank != 0
+
         # Logging
         self.log_dir = log_dir
         self.writer = None
@@ -201,9 +199,7 @@ class OnPolicyRunner:
             )
 
         # start learning
-        obs, extras = self.env.get_observations()
-        privileged_obs = extras["observations"].get(self.privileged_obs_type, obs)
-        obs, privileged_obs = obs.to(self.device), privileged_obs.to(self.device)
+        obs = self.env.get_observations().to(self.device)
         self.train_mode()  # switch to train mode (for dropout for example)
 
         # Book keeping
@@ -232,8 +228,6 @@ class OnPolicyRunner:
         if self.is_distributed:
             print(f"Synchronizing parameters for rank {self.gpu_global_rank}...")
             self.alg.broadcast_parameters()
-            # TODO: Do we need to synchronize empirical normalizers?
-            #   Right now: No, because they all should converge to the same values "asymptotically".
 
         # Start training
         start_iter = self.current_learning_iteration
@@ -244,7 +238,7 @@ class OnPolicyRunner:
             with torch.inference_mode():
                 for _ in range(self.num_steps_per_env):
                     # Sample actions
-                    actions = self.alg.act(obs, privileged_obs)
+                    actions = self.alg.act(obs)
                     # Step the environment
                     obs, rewards, dones, infos = self.env.step(
                         actions.to(self.env.device)
@@ -267,8 +261,7 @@ class OnPolicyRunner:
                         privileged_obs = obs
 
                     # process the step
-                    self.alg.process_env_step(rewards, dones, infos)
-
+                    self.alg.process_env_step(obs, rewards, dones, extras)
                     # Extract intrinsic rewards (only for logging)
                     intrinsic_rewards = (
                         self.alg.intrinsic_rewards if self.alg.rnd else None
@@ -276,10 +269,10 @@ class OnPolicyRunner:
 
                     # book keeping
                     if self.log_dir is not None:
-                        if "episode" in infos:
-                            ep_infos.append(infos["episode"])
-                        elif "log" in infos:
-                            ep_infos.append(infos["log"])
+                        if "episode" in extras:
+                            ep_infos.append(extras["episode"])
+                        elif "log" in extras:
+                            ep_infos.append(extras["log"])
                         # Update rewards
                         if self.alg.rnd:
                             cur_ereward_sum += rewards
@@ -316,8 +309,7 @@ class OnPolicyRunner:
                 start = stop
 
                 # compute returns
-                if self.training_type == "rl":
-                    self.alg.compute_returns(privileged_obs)
+                self.alg.compute_returns(obs)
 
             # update policy
             loss_dict = self.alg.update()
@@ -459,7 +451,7 @@ class OnPolicyRunner:
             for key, value in locs["loss_dict"].items():
                 log_string += f"""{f'Mean {key} loss:':>{pad}} {value:.4f}\n"""
             # -- Rewards
-            if self.alg.rnd:
+            if hasattr(self.alg, "rnd") and self.alg.rnd:
                 log_string += (
                     f"""{'Mean extrinsic reward:':>{pad}} {statistics.mean(locs['erewbuffer']):.2f}\n"""
                     f"""{'Mean intrinsic reward:':>{pad}} {statistics.mean(locs['irewbuffer']):.2f}\n"""
@@ -503,7 +495,7 @@ class OnPolicyRunner:
             "infos": infos,
         }
         # -- Save RND model if used
-        if self.alg.rnd:
+        if hasattr(self.alg, "rnd") and self.alg.rnd:
             saved_dict["rnd_state_dict"] = self.alg.rnd.state_dict()
             saved_dict["rnd_optimizer_state_dict"] = self.alg.rnd_optimizer.state_dict()
         # -- Save observation normalizer if used
@@ -520,14 +512,14 @@ class OnPolicyRunner:
         if self.logger_type in ["neptune", "wandb"] and not self.disable_logs:
             self.writer.save_model(path, self.current_learning_iteration)
 
-    def load(self, path: str, load_optimizer: bool = True):
-        loaded_dict = torch.load(path, weights_only=False)
+    def load(self, path: str, load_optimizer: bool = True, map_location: str | None = None):
+        loaded_dict = torch.load(path, weights_only=False, map_location=map_location)
         # -- Load model
         resumed_training = self.alg.policy.load_state_dict(
             loaded_dict["model_state_dict"]
         )
         # -- Load RND model if used
-        if self.alg.rnd:
+        if hasattr(self.alg, "rnd") and self.alg.rnd:
             self.alg.rnd.load_state_dict(loaded_dict["rnd_state_dict"])
         # -- Load observation normalizer if used
         if self.empirical_normalization:
@@ -576,23 +568,15 @@ class OnPolicyRunner:
         # -- PPO
         self.alg.policy.train()
         # -- RND
-        if self.alg.rnd:
+        if hasattr(self.alg, "rnd") and self.alg.rnd:
             self.alg.rnd.train()
-        # -- Normalization
-        if self.empirical_normalization:
-            self.obs_normalizer.train()
-            self.privileged_obs_normalizer.train()
 
     def eval_mode(self):
         # -- PPO
         self.alg.policy.eval()
         # -- RND
-        if self.alg.rnd:
+        if hasattr(self.alg, "rnd") and self.alg.rnd:
             self.alg.rnd.eval()
-        # -- Normalization
-        if self.empirical_normalization:
-            self.obs_normalizer.eval()
-            self.privileged_obs_normalizer.eval()
 
     def add_git_repo_to_log(self, repo_file_path):
         self.git_status_repos.append(repo_file_path)
@@ -646,3 +630,68 @@ class OnPolicyRunner:
         )
         # set device to the local rank
         torch.cuda.set_device(self.gpu_local_rank)
+
+    def _construct_algorithm(self, obs) -> PPO:
+        """Construct the actor-critic algorithm."""
+        # resolve RND config
+        self.alg_cfg = resolve_rnd_config(self.alg_cfg, obs, self.cfg["obs_groups"], self.env)
+
+        # resolve symmetry config
+        self.alg_cfg = resolve_symmetry_config(self.alg_cfg, self.env)
+
+        # resolve deprecated normalization config
+        if self.cfg.get("empirical_normalization") is not None:
+            warnings.warn(
+                "The `empirical_normalization` parameter is deprecated. Please set `actor_obs_normalization` and "
+                "`critic_obs_normalization` as part of the `policy` configuration instead.",
+                DeprecationWarning,
+            )
+            if self.policy_cfg.get("actor_obs_normalization") is None:
+                self.policy_cfg["actor_obs_normalization"] = self.cfg["empirical_normalization"]
+            if self.policy_cfg.get("critic_obs_normalization") is None:
+                self.policy_cfg["critic_obs_normalization"] = self.cfg["empirical_normalization"]
+
+        # initialize the actor-critic
+        actor_critic_class = eval(self.policy_cfg.pop("class_name"))
+        actor_critic: ActorCritic | ActorCriticRecurrent = actor_critic_class(
+            obs, self.cfg["obs_groups"], self.env.num_actions, **self.policy_cfg
+        ).to(self.device)
+
+        # initialize the algorithm
+        alg_class = eval(self.alg_cfg.pop("class_name"))
+        alg: PPO = alg_class(actor_critic, device=self.device, **self.alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg)
+
+        # initialize the storage
+        alg.init_storage(
+            "rl",
+            self.env.num_envs,
+            self.num_steps_per_env,
+            obs,
+            [self.env.num_actions],
+        )
+
+        return alg
+
+    def _prepare_logging_writer(self):
+        """Prepares the logging writers."""
+        if self.log_dir is not None and self.writer is None and not self.disable_logs:
+            # Launch either Tensorboard or Neptune & Tensorboard summary writer(s), default: Tensorboard.
+            self.logger_type = self.cfg.get("logger", "tensorboard")
+            self.logger_type = self.logger_type.lower()
+
+            if self.logger_type == "neptune":
+                from humanoid_utils.neptune_utils import NeptuneSummaryWriter
+
+                self.writer = NeptuneSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
+                self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
+            elif self.logger_type == "wandb":
+                from humanoid_utils.wandb_utils import WandbSummaryWriter
+
+                self.writer = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
+                self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
+            elif self.logger_type == "tensorboard":
+                from torch.utils.tensorboard import SummaryWriter
+
+                self.writer = SummaryWriter(log_dir=self.log_dir, flush_secs=10)
+            else:
+                raise ValueError("Logger type not found. Please choose 'neptune', 'wandb' or 'tensorboard'.")

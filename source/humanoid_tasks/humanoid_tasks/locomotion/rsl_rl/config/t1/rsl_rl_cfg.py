@@ -487,13 +487,8 @@ class RewardsCfg:
     # -- task
     base_linear_velocity = RewTerm(
         func=humanoid_mdp.base_linear_velocity_reward,
-        weight=5.0,
-        params={
-            "std": 0.5,
-            "ramp_rate": 0.5,
-            "ramp_at_vel": 1.0,
-            "asset_cfg": SceneEntityCfg("robot"),
-        },
+        weight=15.0, # 5
+        params={"std": 0.5, "ramp_rate": 0.5, "ramp_at_vel": 1.0, "asset_cfg": SceneEntityCfg("robot")},
     )
     base_angular_velocity = RewTerm(
         func=humanoid_mdp.base_angular_velocity_reward,
@@ -691,6 +686,23 @@ class RewardsCfg:
             )
         },
     )
+    # foot_lateral_penalty = RewTerm(
+    #     func=humanoid_mdp.foot_lateral_penalty, weight=-15.0,
+    #     params={"asset_cfg": SceneEntityCfg(
+    #         "robot",
+    #         body_names="l[lr]6"
+    #         # body_names=[".*_foot_link"]
+    #     )}
+    # )
+    feet_yaw_diff_penalty = RewTerm(
+        func=humanoid_mdp.feet_yaw_diff_penalty, weight=-5.0,
+        params={"asset_cfg": SceneEntityCfg(
+            "robot",
+            body_names="l[lr]6"
+            # body_names=[".*_foot_link"]
+        )}
+    )
+
     foot_distance = RewTerm(
         func=humanoid_mdp.foot_distance,
         weight=-10.0,
@@ -844,6 +856,10 @@ class T1Baseline_PLAY(T1BaselineCfg):
             self.scene.terrain.terrain_generator.num_rows = 5
             self.scene.terrain.terrain_generator.num_cols = 5
             self.scene.terrain.terrain_generator.curriculum = False
+
+        self.commands.base_velocity.ranges.lin_vel_x = (1.0, 1.0)
+        self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
+        self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
 
         # disable randomization for play
         self.observations.policy.enable_corruption = False
