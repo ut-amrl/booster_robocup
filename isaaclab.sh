@@ -62,13 +62,12 @@ extract_isaacsim_path() {
 # extract the python from isaacsim
 extract_python_exe() {
     # check if using conda
-    # if ! [[ -z "${CONDA_PREFIX}" ]]; then
-    #     # use conda python
-    #     local python_exe=${CONDA_PREFIX}/bin/python
-    # else
+    if ! [[ -z "${CONDA_PREFIX}" ]]; then
+        # use conda python
+        local python_exe=${CONDA_PREFIX}/bin/python
+    else
         # use kit python
-        # local python_exe=${ISAACLAB_PATH}/_isaac_sim/python.sh
-    local python_exe=/workspace/isaaclab/_isaac_sim/python.sh
+        local python_exe=${ISAACLAB_PATH}/_isaac_sim/python.sh
 
     if [ ! -f "${python_exe}" ]; then
             # note: we need to check system python for cases such as docker
@@ -78,7 +77,7 @@ extract_python_exe() {
                 local python_exe=$(which python)
             fi
         fi
-    # fi
+    fi
     # check if there is a python path available
     if [ ! -f "${python_exe}" ]; then
         echo -e "[ERROR] Unable to find any Python executable at path: '${python_exe}'" >&2
