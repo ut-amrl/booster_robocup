@@ -317,12 +317,15 @@ def foot_orientation(
     # Penalize deviation from root yaw
     return quat_diff.pow(2).sum(dim=1)
 
-def foot_lateral_penalty(env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+
+def foot_lateral_penalty(
+    env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg
+) -> torch.Tensor:
     """Penalize feet being too far laterally from the root body position."""
     asset: Articulation = env.scene[asset_cfg.name]
     # world positions
-    root_pos = asset.data.root_pos_w      # (num_envs, 3)
-    root_quat = asset.data.root_quat_w    # (num_envs, 4)
+    root_pos = asset.data.root_pos_w  # (num_envs, 3)
+    root_quat = asset.data.root_quat_w  # (num_envs, 4)
     foot_pos = asset.data.body_pos_w[:, asset_cfg.body_ids]  # (num_envs, num_feet, 3)
 
     # import pdb; pdb.set_trace()
@@ -331,8 +334,13 @@ def foot_lateral_penalty(env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg) -
 
     # rotate displacement into root frame
     # root_quat_exp = root_quat.expand(-1, disp_w.shape[1], -1)
-    disp_root = torch.stack([math_utils.quat_apply_inverse(root_quat, disp_w[:, i, :]) for i in range(disp_w.shape[1])], dim=1)  # (num_envs, num_feet, 3)
-
+    disp_root = torch.stack(
+        [
+            math_utils.quat_apply_inverse(root_quat, disp_w[:, i, :])
+            for i in range(disp_w.shape[1])
+        ],
+        dim=1,
+    )  # (num_envs, num_feet, 3)
 
     # lateral offset = y-coordinate in root frame
     lateral_offset = disp_root[..., 1]  # (num_envs, num_feet)
@@ -342,13 +350,18 @@ def foot_lateral_penalty(env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg) -
     penalty = torch.where(
         lateral_offset.abs() < min_dist,
         torch.zeros_like(lateral_offset),
-        lateral_offset ** 2
-    ).sum(dim=1)  # (num_envs,)
+        lateral_offset**2,
+    ).sum(
+        dim=1
+    )  # (num_envs,)
 
     # Sum across feet
     return penalty
 
-def feet_yaw_diff_penalty(env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+
+def feet_yaw_diff_penalty(
+    env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg
+) -> torch.Tensor:
     """Penalize misalignment in feet yaw."""
     # extract quantifies
     asset: Articulation = env.scene[asset_cfg.name]
@@ -358,14 +371,14 @@ def feet_yaw_diff_penalty(env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg) 
     # Extract yaw-only quaternions
     # root_yaw_quat = math_utils.yaw_quat(root_quat)
     foot_yaw_quats = math_utils.yaw_quat(foot_quats)
-    left_foot_quats = foot_yaw_quats[:,0,:]
-    right_foot_quats = foot_yaw_quats[:,1,:]
+    left_foot_quats = foot_yaw_quats[:, 0, :]
+    right_foot_quats = foot_yaw_quats[:, 1, :]
 
     # Compute squared quaternion difference using dot product (cosine distance)
     quat_diff = 1 - (right_foot_quats * left_foot_quats).sum(dim=-1).abs()
-    
+
     # Penalize misalignment in feet
-    return quat_diff.pow(2) #.sum(dim=1)
+    return quat_diff.pow(2)  # .sum(dim=1)
 
 
 def foot_distance(

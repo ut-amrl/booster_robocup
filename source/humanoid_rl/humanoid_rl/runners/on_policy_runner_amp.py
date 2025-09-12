@@ -473,7 +473,7 @@ class OnPolicyRunner:
                 self.obs_normalizer.to(device)
             policy = lambda x: self.alg.policy.act_inference(  # noqa: E731
                 self.obs_normalizer(x)
-            )  # noqa: E731
+            )
         return policy
 
     def train_mode(self):

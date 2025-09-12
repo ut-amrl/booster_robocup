@@ -633,12 +633,15 @@ class RewardsCfg:
         },
     )
     foot_lateral_penalty = RewTerm(
-        func=humanoid_mdp.foot_lateral_penalty, weight=-15.0,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            body_names=".*_FOOT"
-            # body_names=[".*_foot_link"]
-        )}
+        func=humanoid_mdp.foot_lateral_penalty,
+        weight=-15.0,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                body_names=".*_FOOT",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
     foot_distance = RewTerm(
         func=humanoid_mdp.foot_distance,

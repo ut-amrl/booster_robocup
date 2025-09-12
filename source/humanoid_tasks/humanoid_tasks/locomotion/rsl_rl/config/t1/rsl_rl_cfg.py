@@ -487,8 +487,13 @@ class RewardsCfg:
     # -- task
     base_linear_velocity = RewTerm(
         func=humanoid_mdp.base_linear_velocity_reward,
-        weight=15.0, # 5
-        params={"std": 0.5, "ramp_rate": 0.5, "ramp_at_vel": 1.0, "asset_cfg": SceneEntityCfg("robot")},
+        weight=15.0,  # 5
+        params={
+            "std": 0.5,
+            "ramp_rate": 0.5,
+            "ramp_at_vel": 1.0,
+            "asset_cfg": SceneEntityCfg("robot"),
+        },
     )
     base_angular_velocity = RewTerm(
         func=humanoid_mdp.base_angular_velocity_reward,
@@ -695,12 +700,15 @@ class RewardsCfg:
     #     )}
     # )
     feet_yaw_diff_penalty = RewTerm(
-        func=humanoid_mdp.feet_yaw_diff_penalty, weight=-5.0,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        )}
+        func=humanoid_mdp.feet_yaw_diff_penalty,
+        weight=-5.0,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
 
     foot_distance = RewTerm(
