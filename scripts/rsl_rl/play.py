@@ -103,6 +103,7 @@ from isaaclab_rl.rsl_rl import (  # noqa: E402
 )
 
 import isaaclab_tasks  # noqa: F401, E402
+import humanoid_tasks  # noqa: F401, E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
 
