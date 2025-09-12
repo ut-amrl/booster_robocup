@@ -33,7 +33,9 @@ class NeptuneSummaryWriter(SummaryWriter):
         try:
             project = cfg["neptune_project"]
         except KeyError:
-            raise KeyError("Please specify neptune_project in the runner config, e.g. legged_gym.")
+            raise KeyError(
+                "Please specify neptune_project in the runner config, e.g. legged_gym."
+            )
 
         try:
             token = os.environ["NEPTUNE_API_TOKEN"]
@@ -68,7 +70,9 @@ class NeptuneSummaryWriter(SummaryWriter):
         else:
             return path
 
-    def add_scalar(self, tag, scalar_value, global_step=None, walltime=None, new_style=False):
+    def add_scalar(
+        self, tag, scalar_value, global_step=None, walltime=None, new_style=False
+    ):
         super().add_scalar(
             tag,
             scalar_value,

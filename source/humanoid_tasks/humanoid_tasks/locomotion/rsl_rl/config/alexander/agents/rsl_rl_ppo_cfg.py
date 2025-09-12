@@ -5,6 +5,7 @@ from isaaclab_rl.rsl_rl import (
     RslRlPpoAlgorithmCfg,
 )
 
+
 @configclass
 class AlexanderPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24

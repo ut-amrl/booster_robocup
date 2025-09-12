@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from isaacgym import gymapi, gymutil, gymtorch
+from isaacgym import gymapi, gymutil
 
 
 def clamp(x, min_value, max_value):

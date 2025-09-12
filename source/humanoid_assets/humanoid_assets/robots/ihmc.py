@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg, DelayedPDActuatorCfg, IdealPDActuatorCfg
+from isaaclab.actuators import (
+    IdealPDActuatorCfg,
+)
 from isaaclab.assets import ArticulationCfg
 
 import os
+
 EXT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 """Path to the extension source directory."""
 
@@ -23,14 +26,18 @@ ALEXANDER_CFG = ArticulationCfg(
         merge_fixed_joints=True,
         convert_mimic_joints_to_normal_joints=False,
         joint_drive=sim_utils.UrdfConverterCfg.JointDriveCfg(
-                gains=sim_utils.UrdfConverterCfg.JointDriveCfg.PDGainsCfg(stiffness=None, damping=None)
+            gains=sim_utils.UrdfConverterCfg.JointDriveCfg.PDGainsCfg(
+                stiffness=None, damping=None
+            )
         ),
         collider_type="convex_hull",
         self_collision=True,
         replace_cylinders_with_capsules=False,
         scale=None,
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-            enabled_self_collisions=True, solver_position_iteration_count=8, solver_velocity_iteration_count=4
+            enabled_self_collisions=True,
+            solver_position_iteration_count=8,
+            solver_velocity_iteration_count=4,
         ),
         fixed_tendons_props=None,
         joint_drive_props=sim_utils.JointDrivePropertiesCfg(
@@ -170,7 +177,7 @@ ALEXANDER_CFG = ArticulationCfg(
             stiffness=67,
             damping=2,
             armature=0.002301,
-            effort_limit=90.0
+            effort_limit=90.0,
         ),
         "ankle_y": ActuatorCfg(
             joint_names_expr=[".*_ANKLE_Y"],
@@ -179,7 +186,7 @@ ALEXANDER_CFG = ArticulationCfg(
             armature=0.002301,
             effort_limit=180.0,
         ),
-    }, # type: ignore
+    },  # type: ignore
 )
 """Configuration for the Booster T1 Humanoid robot."""
 
@@ -258,7 +265,7 @@ ALEXANDER_CFG = ArticulationCfg(
 #             # velocity_limit=50.0,
 #         ),
 #         "hands": ActuatorCfg(
-#             joint_names_expr=["LEFT_WRIST_[XZ]", 
+#             joint_names_expr=["LEFT_WRIST_[XZ]",
 #                     "RIGHT_WRIST_[XZ]",
 #                     "LEFT_GRIPPER_Z",
 #                     "RIGHT_GRIPPER_Z"],
@@ -335,4 +342,3 @@ ALEXANDER_CFG = ArticulationCfg(
 #     }, # type: ignore
 # )
 # """Configuration for the Booster T1 Humanoid robot."""
-

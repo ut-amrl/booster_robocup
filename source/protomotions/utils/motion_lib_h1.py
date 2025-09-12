@@ -12,18 +12,18 @@ from protomotions.utils.motion_lib import MotionLib
 
 class H1_MotionLib(MotionLib):
     def __init__(
-            self,
-            motion_file,
-            robot_config: RobotConfig,
-            key_body_ids,
-            device="cpu",
-            ref_height_adjust: float = 0,
-            target_frame_rate: int = 30,
-            w_last: bool = True,
-            create_text_embeddings: bool = False,
-            local_rot_conversion: torch.Tensor = None,
-            fix_motion_heights: bool = True,
-            skeleton_tree: Any = None,
+        self,
+        motion_file,
+        robot_config: RobotConfig,
+        key_body_ids,
+        device="cpu",
+        ref_height_adjust: float = 0,
+        target_frame_rate: int = 30,
+        w_last: bool = True,
+        create_text_embeddings: bool = False,
+        local_rot_conversion: torch.Tensor = None,
+        fix_motion_heights: bool = True,
+        skeleton_tree: Any = None,
     ):
 
         super().__init__(
@@ -51,8 +51,12 @@ class H1_MotionLib(MotionLib):
 
     def _load_motion_file(self, motion_file):
         motion = EasyDict(torch.load(motion_file))
-        motion.local_rotation = dof_to_local(motion.dof_pos, self.robot_config.dof_offsets,
-                                             self.robot_config.joint_axis, True)
+        motion.local_rotation = dof_to_local(
+            motion.dof_pos,
+            self.robot_config.dof_offsets,
+            self.robot_config.joint_axis,
+            True,
+        )
 
         return motion
 
@@ -77,7 +81,7 @@ class H1_MotionLib(MotionLib):
             end_frame = int(end * motion.fps)
 
         assert (
-                start_frame < end_frame
+            start_frame < end_frame
         ), f"Motion start frame {start_frame} >= motion end frame {end_frame}"
 
         sliced_motion = {}

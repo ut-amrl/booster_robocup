@@ -3,26 +3,34 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import Articulation, RigidObject
+from isaaclab.assets import RigidObject
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import ContactSensor, RayCaster
+from isaaclab.sensors import ContactSensor
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
-    from isaaclab.managers.command_manager import CommandTerm
 
 
-def illegal_contact_filtered(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
+def illegal_contact_filtered(
+    env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg
+) -> torch.Tensor:
     """Terminate when the contact force on the sensor exceeds the force threshold."""
     # extract the used quantities (to enable type-hinting)
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
-    contact_matrix = contact_sensor.data.force_matrix_w[:, sensor_cfg.body_ids, ...]  #  [envs, bodies per sensor, filters per sensor, 3]
+    contact_matrix = contact_sensor.data.force_matrix_w[
+        :, sensor_cfg.body_ids, ...
+    ]  #  [envs, bodies per sensor, filters per sensor, 3]
     # check if any contact force exceeds the threshold
-    contact_forces = torch.where(contact_matrix.norm(dim=3).view(env.num_envs, -1) > threshold, 1, 0)
+    contact_forces = torch.where(
+        contact_matrix.norm(dim=3).view(env.num_envs, -1) > threshold, 1, 0
+    )
     return torch.any(contact_forces, dim=1)
 
+
 def terrain_out_of_bounds(
-    env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), distance_buffer: float = 3.0
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    distance_buffer: float = 3.0,
 ) -> torch.Tensor:
     """Terminate when the actor move too close to the edge of the terrain.
 
@@ -47,8 +55,14 @@ def terrain_out_of_bounds(
         asset: RigidObject = env.scene[asset_cfg.name]
 
         # check if the agent is out of bounds
-        x_out_of_bounds = torch.abs(asset.data.root_pos_w[:, 0]) > 0.5 * map_width - distance_buffer
-        y_out_of_bounds = torch.abs(asset.data.root_pos_w[:, 1]) > 0.5 * map_height - distance_buffer
+        x_out_of_bounds = (
+            torch.abs(asset.data.root_pos_w[:, 0]) > 0.5 * map_width - distance_buffer
+        )
+        y_out_of_bounds = (
+            torch.abs(asset.data.root_pos_w[:, 1]) > 0.5 * map_height - distance_buffer
+        )
         return torch.logical_or(x_out_of_bounds, y_out_of_bounds)
     else:
-        raise ValueError("Received unsupported terrain type, must be either 'plane' or 'generator'.")
+        raise ValueError(
+            "Received unsupported terrain type, must be either 'plane' or 'generator'."
+        )

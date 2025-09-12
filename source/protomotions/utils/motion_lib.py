@@ -20,23 +20,23 @@ from poselib.skeleton.skeleton3d import SkeletonMotion, SkeletonState
 import sys
 import protomotions
 
-sys.modules['phys_anim'] = protomotions
+sys.modules["phys_anim"] = protomotions
 
 
 class LoadedMotions(nn.Module):
     def __init__(
-            self,
-            motions: Tuple[SkeletonMotion],
-            motion_lengths: Tensor,
-            motion_weights: Tensor,
-            motion_fps: Tensor,
-            motion_dt: Tensor,
-            motion_num_frames: Tensor,
-            motion_files: Tuple[str],
-            ref_respawn_offsets: Tensor,
-            text_embeddings: Tensor = None,
-            has_text_embeddings: Tensor = None,
-            **kwargs,  # Catch some nn.Module arguments that aren't needed
+        self,
+        motions: Tuple[SkeletonMotion],
+        motion_lengths: Tensor,
+        motion_weights: Tensor,
+        motion_fps: Tensor,
+        motion_dt: Tensor,
+        motion_num_frames: Tensor,
+        motion_files: Tuple[str],
+        ref_respawn_offsets: Tensor,
+        text_embeddings: Tensor = None,
+        has_text_embeddings: Tensor = None,
+        **kwargs,  # Catch some nn.Module arguments that aren't needed
     ):
         super().__init__()
         self.motions = motions
@@ -72,18 +72,18 @@ class MotionLib(DeviceDtypeModuleMixin):
     key_body_ids: Tensor
 
     def __init__(
-            self,
-            motion_file,
-            robot_config: RobotConfig,
-            key_body_ids,
-            device="cpu",
-            ref_height_adjust: float = 0,
-            target_frame_rate: int = 30,
-            create_text_embeddings: bool = False,
-            fix_motion_heights: bool = True,
-            skeleton_tree: Any = None,
-            local_rot_conversion: Tensor = None,
-            w_last: bool = True,
+        self,
+        motion_file,
+        robot_config: RobotConfig,
+        key_body_ids,
+        device="cpu",
+        ref_height_adjust: float = 0,
+        target_frame_rate: int = 30,
+        create_text_embeddings: bool = False,
+        fix_motion_heights: bool = True,
+        skeleton_tree: Any = None,
+        local_rot_conversion: Tensor = None,
+        w_last: bool = True,
     ):
         super().__init__()
         self.w_last = w_last
@@ -263,7 +263,7 @@ class MotionLib(DeviceDtypeModuleMixin):
             return self.state.motion_lengths[motion_ids]
 
     def get_motion_state(
-            self, motion_ids, motion_times, joint_3d_format="exp_map"
+        self, motion_ids, motion_times, joint_3d_format="exp_map"
     ) -> RobotState:
         motion_len = self.state.motion_lengths[motion_ids]
         motion_times = motion_times.clip(min=0).clip(
@@ -360,7 +360,9 @@ class MotionLib(DeviceDtypeModuleMixin):
         root_vel = (1.0 - blend) * root_vel0 + blend * root_vel1
         root_ang_vel = (1.0 - blend) * root_ang_vel0 + blend * root_ang_vel1
         dof_vel = (1.0 - blend) * dof_vel0 + blend * dof_vel1
-        rigid_body_pos = (1.0 - blend_exp) * rigid_body_pos0 + blend_exp * rigid_body_pos1
+        rigid_body_pos = (
+            1.0 - blend_exp
+        ) * rigid_body_pos0 + blend_exp * rigid_body_pos1
         rigid_body_pos[:, :, 2] += self.ref_height_adjust
         rigid_body_rot = torch_utils.slerp(rigid_body_rot0, rigid_body_rot1, blend_exp)
         global_vel = (1.0 - blend_exp) * global_vel0 + blend_exp * global_vel1
@@ -386,7 +388,9 @@ class MotionLib(DeviceDtypeModuleMixin):
 
     @staticmethod
     def _load_motion_file(motion_file):
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         print(f"load motion file {__file__}")
         return SkeletonMotion.from_file(motion_file)
 
@@ -400,7 +404,7 @@ class MotionLib(DeviceDtypeModuleMixin):
             end_frame = int(end * motion.fps)
 
         assert (
-                start_frame < end_frame
+            start_frame < end_frame
         ), f"Motion start frame {start_frame} >= motion end frame {end_frame}"
 
         sliced_local_rotation = motion.local_rotation[start_frame:end_frame].clone()
@@ -457,7 +461,7 @@ class MotionLib(DeviceDtypeModuleMixin):
             cur_fps = full_motion_fpses[motion_f]
             if cur_fps is None:
                 cur_fps = curr_motion.fps
-                
+
             if cur_fps > target_frame_rate:
                 # Not necessary, but we downsample the FPS to save memory
                 # do nothing if cur_fps <= target_frame_rate
@@ -584,7 +588,7 @@ class MotionLib(DeviceDtypeModuleMixin):
                     motion_entry.sub_motions[0].idx = motion_index
 
                 for sub_motion in sorted(
-                        motion_entry.sub_motions, key=lambda x: int(x.idx)
+                    motion_entry.sub_motions, key=lambda x: int(x.idx)
                 ):
                     curr_weight = sub_motion.weight
                     assert curr_weight >= 0
@@ -680,7 +684,9 @@ class MotionLib(DeviceDtypeModuleMixin):
         dof_offsets = self.robot_config.dof_offsets
 
         n = local_rot.shape[0]
-        dof_pos = torch.zeros((n, self.robot_config.num_dof), dtype=torch.float, device=self._device)
+        dof_pos = torch.zeros(
+            (n, self.robot_config.num_dof), dtype=torch.float, device=self._device
+        )
 
         for j in range(len(body_ids)):
             body_id = body_ids[j]
@@ -697,7 +703,7 @@ class MotionLib(DeviceDtypeModuleMixin):
                 else:
                     raise ValueError(f"Unknown 3d format '{joint_3d_format}'")
 
-                dof_pos[:, joint_offset: (joint_offset + joint_size)] = formatted_joint
+                dof_pos[:, joint_offset : (joint_offset + joint_size)] = formatted_joint
             elif joint_size == 1:
                 joint_q = local_rot[:, body_id]
                 configured_joint_axis = self.robot_config.joint_axis[j]
@@ -711,9 +717,7 @@ class MotionLib(DeviceDtypeModuleMixin):
                 elif configured_joint_axis == "z":
                     joint_axis[..., 2]
 
-                joint_theta = (
-                        joint_theta * joint_axis
-                )
+                joint_theta = joint_theta * joint_axis
 
                 joint_theta = rotations.normalize_angle(joint_theta)
                 dof_pos[:, joint_offset] = joint_theta
@@ -742,7 +746,7 @@ class MotionLib(DeviceDtypeModuleMixin):
 
             if joint_size == 3:
                 joint_vel = local_vel[body_id]
-                dof_vel[joint_offset: (joint_offset + joint_size)] = joint_vel
+                dof_vel[joint_offset : (joint_offset + joint_size)] = joint_vel
 
             elif joint_size == 1:
                 assert joint_size == 1
@@ -785,10 +789,10 @@ class MotionLib(DeviceDtypeModuleMixin):
 
     @staticmethod
     def _fix_motion_fps(
-            motion,
-            orig_fps,
-            target_frame_rate,
-            skeleton_tree,
+        motion,
+        orig_fps,
+        target_frame_rate,
+        skeleton_tree,
     ):
         if skeleton_tree is None:
             if hasattr(motion, "skeleton_tree"):
@@ -807,6 +811,8 @@ class MotionLib(DeviceDtypeModuleMixin):
             rt,
             is_local=True,
         )
-        new_motion = SkeletonMotion.from_skeleton_state(new_sk_state, fps=target_frame_rate)
+        new_motion = SkeletonMotion.from_skeleton_state(
+            new_sk_state, fps=target_frame_rate
+        )
 
         return new_motion

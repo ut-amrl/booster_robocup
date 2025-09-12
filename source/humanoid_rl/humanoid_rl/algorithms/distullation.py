@@ -64,12 +64,20 @@ class Distillation:
         elif loss_type == "huber":
             self.loss_fn = nn.functional.huber_loss
         else:
-            raise ValueError(f"Unknown loss type: {loss_type}. Supported types are: mse, huber")
+            raise ValueError(
+                f"Unknown loss type: {loss_type}. Supported types are: mse, huber"
+            )
 
         self.num_updates = 0
 
     def init_storage(
-        self, training_type, num_envs, num_transitions_per_env, student_obs_shape, teacher_obs_shape, actions_shape
+        self,
+        training_type,
+        num_envs,
+        num_transitions_per_env,
+        student_obs_shape,
+        teacher_obs_shape,
+        actions_shape,
     ):
         # create rollout storage
         self.storage = RolloutStorage(
@@ -130,7 +138,9 @@ class Distillation:
                     if self.is_multi_gpu:
                         self.reduce_parameters()
                     if self.max_grad_norm:
-                        nn.utils.clip_grad_norm_(self.policy.student.parameters(), self.max_grad_norm)
+                        nn.utils.clip_grad_norm_(
+                            self.policy.student.parameters(), self.max_grad_norm
+                        )
                     self.optimizer.step()
                     self.policy.detach_hidden_states()
                     loss = 0
@@ -168,7 +178,11 @@ class Distillation:
         This function is called after the backward pass to synchronize the gradients across all GPUs.
         """
         # Create a tensor to store the gradients
-        grads = [param.grad.view(-1) for param in self.policy.parameters() if param.grad is not None]
+        grads = [
+            param.grad.view(-1)
+            for param in self.policy.parameters()
+            if param.grad is not None
+        ]
         all_grads = torch.cat(grads)
         # Average the gradients across all GPUs
         torch.distributed.all_reduce(all_grads, op=torch.distributed.ReduceOp.SUM)
@@ -179,6 +193,8 @@ class Distillation:
             if param.grad is not None:
                 numel = param.numel()
                 # copy data back from shared buffer
-                param.grad.data.copy_(all_grads[offset : offset + numel].view_as(param.grad.data))
+                param.grad.data.copy_(
+                    all_grads[offset : offset + numel].view_as(param.grad.data)
+                )
                 # update the offset for the next parameter
                 offset += numel

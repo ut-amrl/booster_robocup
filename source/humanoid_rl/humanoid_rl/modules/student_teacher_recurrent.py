@@ -36,7 +36,9 @@ class StudentTeacherRecurrent(StudentTeacher):
                 "Please use `rnn_hidden_dim` instead.",
                 DeprecationWarning,
             )
-            if rnn_hidden_dim == 256:  # Only override if the new argument is at its default
+            if (
+                rnn_hidden_dim == 256
+            ):  # Only override if the new argument is at its default
                 rnn_hidden_dim = kwargs.pop("rnn_hidden_size")
         if kwargs:
             print(
@@ -58,10 +60,18 @@ class StudentTeacherRecurrent(StudentTeacher):
 
         activation = resolve_nn_activation(activation)
 
-        self.memory_s = Memory(num_student_obs, type=rnn_type, num_layers=rnn_num_layers, hidden_size=rnn_hidden_dim)
+        self.memory_s = Memory(
+            num_student_obs,
+            type=rnn_type,
+            num_layers=rnn_num_layers,
+            hidden_size=rnn_hidden_dim,
+        )
         if self.teacher_recurrent:
             self.memory_t = Memory(
-                num_teacher_obs, type=rnn_type, num_layers=rnn_num_layers, hidden_size=rnn_hidden_dim
+                num_teacher_obs,
+                type=rnn_type,
+                num_layers=rnn_num_layers,
+                hidden_size=rnn_hidden_dim,
             )
 
         print(f"Student RNN: {self.memory_s}")

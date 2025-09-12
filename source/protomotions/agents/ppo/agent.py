@@ -104,8 +104,10 @@ class PPO:
             print(f"Loading model from checkpoint: {checkpoint}")
             state_dict = torch.load(checkpoint, map_location=self.device)
             self.load_parameters(state_dict)
-            
-            env_checkpoint = checkpoint.resolve().parent / f"env_{self.fabric.global_rank}.ckpt"
+
+            env_checkpoint = (
+                checkpoint.resolve().parent / f"env_{self.fabric.global_rank}.ckpt"
+            )
             if env_checkpoint.exists():
                 print(f"Loading env checkpoint: {env_checkpoint}")
                 env_state_dict = torch.load(env_checkpoint, map_location=self.device)
@@ -170,7 +172,7 @@ class PPO:
                 (root_dir / "last.ckpt").symlink_to(relative_path)
                 log.info(f"saved checkpoint, {root_dir / 'last.ckpt'}")
         self.fabric.barrier()
-        
+
         # Save env state for all ranks to the same directory.
         rank_0_path = (root_dir / "last.ckpt").resolve().parent
         env_checkpoint = rank_0_path / f"env_{self.fabric.global_rank}.ckpt"
@@ -255,7 +257,9 @@ class PPO:
                     description=f"Epoch {self.current_epoch}, collecting data...",
                 ):
                     obs = self.handle_reset(done_indices)
-                    self.experience_buffer.update_data("self_obs", step, obs["self_obs"])
+                    self.experience_buffer.update_data(
+                        "self_obs", step, obs["self_obs"]
+                    )
                     if self.config.get("extra_inputs", None) is not None:
                         for key in self.config.extra_inputs:
                             self.experience_buffer.update_data(key, step, obs[key])
@@ -316,7 +320,9 @@ class PPO:
                 self.experience_buffer.batch_update_data("returns", returns)
 
                 if self.config.normalize_advantage:
-                    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+                    advantages = (advantages - advantages.mean()) / (
+                        advantages.std() + 1e-8
+                    )
                 self.experience_buffer.batch_update_data("advantages", advantages)
 
             training_log_dict = self.optimize_model()
@@ -472,7 +478,9 @@ class PPO:
 
         actor_ppo_loss = ppo_loss.mean()
         b_loss = b_loss.mean()
-        extra_loss, extra_actor_log_dict = self.calculate_extra_actor_loss(batch_dict, dist)
+        extra_loss, extra_actor_log_dict = self.calculate_extra_actor_loss(
+            batch_dict, dist
+        )
         actor_loss = actor_ppo_loss + b_loss + extra_loss
 
         log_dict = {
@@ -594,7 +602,7 @@ class PPO:
         if len(env_log_dict) > 0:
             log_dict.update(env_log_dict)
         log_dict.update(training_log_dict)
-        self.fabric.log_dict(log_dict, step = self.current_epoch)
+        self.fabric.log_dict(log_dict, step=self.current_epoch)
 
     # -----------------------------
     # Helper Functions
@@ -611,11 +619,16 @@ class PPO:
 
     def max_num_batches(self):
         return math.ceil(
-            self.num_envs * self.num_steps * self.num_mini_epochs / self.config.batch_size
+            self.num_envs
+            * self.num_steps
+            * self.num_mini_epochs
+            / self.config.batch_size
         )
 
     def get_step_count_increment(self):
-        return self.num_envs * self.fabric.world_size  # fabric.world_size = num gpu * num nodes
+        return (
+            self.num_envs * self.fabric.world_size
+        )  # fabric.world_size = num gpu * num nodes
 
     def extra_optimization_steps(self, batch_dict, batch_idx: int):
         return {}

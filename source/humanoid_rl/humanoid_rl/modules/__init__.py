@@ -9,4 +9,10 @@ from .normalizer import EmpiricalNormalization
 from .student_teacher import StudentTeacher
 from .student_teacher_recurrent import StudentTeacherRecurrent
 
-__all__ = ["ActorCritic", "ActorCriticRecurrent", "EmpiricalNormalization", "StudentTeacher", "StudentTeacherRecurrent"]
+__all__ = [
+    "ActorCritic",
+    "ActorCriticRecurrent",
+    "EmpiricalNormalization",
+    "StudentTeacher",
+    "StudentTeacherRecurrent",
+]

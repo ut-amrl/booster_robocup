@@ -52,10 +52,7 @@ class DGCNN(NormObsBase):
         self.non_point_inputs = 8 * 3 + 6 + self.config.num_contact_bodies * 3
 
         self.linear_input_dim = (
-            self.config.emb_dims * 2
-            + 8 * 3
-            + 6
-            + self.config.num_contact_bodies * 3
+            self.config.emb_dims * 2 + 8 * 3 + 6 + self.config.num_contact_bodies * 3
         )
 
         self.conv1 = nn.Sequential(

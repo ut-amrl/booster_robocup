@@ -51,3 +51,7 @@ _build
 **/runs/*
 **/logs/*
 **/recordings/*
+
+# Linter
+**/node_modules/*
+.ruff_cache/

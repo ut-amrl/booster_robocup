@@ -116,6 +116,7 @@ def value_to_color(value, min_value, max_value):
     # Return the RGB color
     return red, green, blue
 
+
 def subprocess_run(cmd, ignore_err=False, **kwargs):
     result = subprocess.run(cmd, **kwargs)
     if result.returncode != 0:

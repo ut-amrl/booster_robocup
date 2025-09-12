@@ -7,3 +7,9 @@
 
 from .importer import import_packages
 from .parse_cfg import get_checkpoint_path, load_cfg_from_registry, parse_env_cfg
+
+# implicit re-exports
+import_packages = import_packages
+get_checkpoint_path = get_checkpoint_path
+load_cfg_from_registry = load_cfg_from_registry
+parse_env_cfg = parse_env_cfg

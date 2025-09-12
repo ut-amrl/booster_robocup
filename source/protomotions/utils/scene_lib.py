@@ -30,6 +30,7 @@ class ObjectMotion:
       'rotation': tuple of 4 floats.
     fps: Frames per second for the motion (default is 30.0).
     """
+
     frames: List[dict] = field(default_factory=list)
     fps: float = None
 
@@ -39,13 +40,16 @@ class ObjectOptions:
     """
     Contains options for configuring object properties in the simulator.
     """
+
     fix_base_link: bool = field(default=MISSING)
     vhacd_enabled: bool = None
-    vhacd_params: Dict = field(default_factory=lambda: {
-        "resolution": None,
-        "max_convex_hulls": None,
-        "max_num_vertices_per_ch": None,
-    })
+    vhacd_params: Dict = field(
+        default_factory=lambda: {
+            "resolution": None,
+            "max_convex_hulls": None,
+            "max_num_vertices_per_ch": None,
+        }
+    )
     density: float = None
     angular_damping: float = None
     linear_damping: float = None
@@ -69,6 +73,7 @@ class SceneObject:
     Represents an object inside a scene.
     Defaults to translation (0,0,0) and rotation (0,0,0,1) if not provided.
     """
+
     object_path: str = field(default=MISSING)
     translation: Tuple[float, float, float] = field(default=MISSING)
     rotation: Tuple[float, float, float, float] = field(default=MISSING)
@@ -82,6 +87,7 @@ class Scene:
     Represents a scene consisting of one or more SceneObjects.
     An offset (x, y) indicates the scene's location.
     """
+
     objects: List[SceneObject] = field(default_factory=list)
     offset: Tuple[float, float] = (0.0, 0.0)
 
@@ -95,6 +101,7 @@ class ObjectState:
     """
     Represents the state of an object, including translations and rotations as torch tensors.
     """
+
     translations: torch.Tensor
     rotations: torch.Tensor
 
@@ -104,6 +111,7 @@ class SpawnInfo:
     """
     Contains information about how to spawn an object in the scene.
     """
+
     id: int
     object_path: str
     object_options: ObjectOptions
@@ -124,7 +132,8 @@ class SceneLib:
 
     Note: SceneObjects no longer have explicit IDs; their order defines their unique index.
     """
-    def __init__(self, num_envs: int,device: str = "cpu"):
+
+    def __init__(self, num_envs: int, device: str = "cpu"):
         """
         Args:
             config: Dictionary containing keys:
@@ -144,11 +153,19 @@ class SceneLib:
         self.object_translations = None
         self.object_rotations = None
         self.motion_lengths = None  # In seconds, per object
-        self.motion_starts = None   # Starting index in the unified tensor for each object
-        self.motion_dts = None      # Delta time for each object's motion
+        self.motion_starts = (
+            None  # Starting index in the unified tensor for each object
+        )
+        self.motion_dts = None  # Delta time for each object's motion
         self.motion_num_frames = None  # Number of frames in each object's motion
 
-    def create_scenes(self, scenes: List[Scene], terrain: Terrain, assign_method: str = "sequential", replicate_method: str = "random") -> List[Scene]:
+    def create_scenes(
+        self,
+        scenes: List[Scene],
+        terrain: Terrain,
+        assign_method: str = "sequential",
+        replicate_method: str = "random",
+    ) -> List[Scene]:
         """
         Create and assign scenes to environments using configurations from the Terrain object.
 
@@ -195,42 +212,61 @@ class SceneLib:
                     assigned_scenes.append(scene)
             else:
                 logger.error("Unknown replicate method: %s", replicate_method)
-                raise ValueError("Replicate method must be either 'sequential' or 'random'.")
+                raise ValueError(
+                    "Replicate method must be either 'sequential' or 'random'."
+                )
 
         # Use Terrain configurations to compute scene offsets and validate spawn locations
         # Compute offsets using terrain properties
         for idx, scene in enumerate(assigned_scenes):
-            x_offset = ((idx % terrain.num_scenes_per_column + 1) * terrain.spacing_between_scenes + terrain.border * terrain.horizontal_scale)
-            y_offset = ((idx // terrain.num_scenes_per_column + 1) * terrain.spacing_between_scenes + terrain.scene_y_offset)
+            x_offset = (
+                (idx % terrain.num_scenes_per_column + 1)
+                * terrain.spacing_between_scenes
+                + terrain.border * terrain.horizontal_scale
+            )
+            y_offset = (
+                idx // terrain.num_scenes_per_column + 1
+            ) * terrain.spacing_between_scenes + terrain.scene_y_offset
             scene.offset = (x_offset, y_offset)
-            
+
             # Compute integer grid location
             scene_x = int(x_offset / terrain.horizontal_scale)
             scene_y = int(y_offset / terrain.horizontal_scale)
             locations = torch.tensor([[scene_x, scene_y]], device=terrain.device)
-            assert terrain.is_valid_spawn_location(locations).cpu().item(), f"Scene {idx} is not a valid spawn location."
+            assert (
+                terrain.is_valid_spawn_location(locations).cpu().item()
+            ), f"Scene {idx} is not a valid spawn location."
             terrain.mark_scene_location(scene_x, scene_y)
-            logger.info("Assigned scene id %s to offset (%.2f, %.2f)", idx, x_offset, y_offset)
+            logger.info(
+                "Assigned scene id %s to offset (%.2f, %.2f)", idx, x_offset, y_offset
+            )
             self._scene_offsets.append((x_offset, y_offset))
 
             # Ensure each scene has the same number of objects
             object_counts = [len(scene.objects) for scene in assigned_scenes]
             if len(set(object_counts)) != 1:
-                logger.error("All scenes must have the same number of objects. Found counts: %s", object_counts)
-                raise ValueError("Scenes have inconsistent number of objects: " + str(object_counts))
+                logger.error(
+                    "All scenes must have the same number of objects. Found counts: %s",
+                    object_counts,
+                )
+                raise ValueError(
+                    "Scenes have inconsistent number of objects: " + str(object_counts)
+                )
             self.num_objects_per_scene = object_counts[0]
 
         # Create object spawn list from the first scene (canonical objects)
         for idx, obj in enumerate(assigned_scenes[0].objects):
-            min_x, max_x, min_y, max_y, min_z, max_z = self.compute_object_dims(obj.object_path)
-            
+            min_x, max_x, min_y, max_y, min_z, max_z = self.compute_object_dims(
+                obj.object_path
+            )
+
             spawn_info = SpawnInfo(
                 id=idx,  # First instance gets its index as ID
                 object_path=obj.object_path,
                 object_options=obj.options,
                 object_dims=(min_x, max_x, min_y, max_y, min_z, max_z),
                 is_first_instance=True,
-                first_instance_id=idx
+                first_instance_id=idx,
             )
             self._object_spawn_list.append(spawn_info)
             self._object_path_to_id[obj.object_path] = idx
@@ -249,9 +285,11 @@ class SceneLib:
                         id=first_instance_id,  # Use the ID of the first instance
                         object_path=obj.object_path,
                         object_options=obj.options,
-                        object_dims=self._object_spawn_list[first_instance_id].object_dims,
+                        object_dims=self._object_spawn_list[
+                            first_instance_id
+                        ].object_dims,
                         is_first_instance=False,
-                        first_instance_id=first_instance_id
+                        first_instance_id=first_instance_id,
                     )
                     self._object_spawn_list.append(spawn_info)
 
@@ -260,11 +298,23 @@ class SceneLib:
         # Automatically combine object motions so the user does not have to call it
         self.combine_object_motions()
         return assigned_scenes
-    
+
     def compute_object_dims(self, object_path):
-        obj_path = object_path.replace(".urdf", ".obj").replace(".usda", ".obj").replace(".usd", ".obj")
-        stl_path = object_path.replace(".urdf", ".stl").replace(".usda", ".stl").replace(".usd", ".stl")
-        ply_path = object_path.replace(".urdf", ".ply").replace(".usda", ".ply").replace(".usd", ".ply")
+        obj_path = (
+            object_path.replace(".urdf", ".obj")
+            .replace(".usda", ".obj")
+            .replace(".usd", ".obj")
+        )
+        stl_path = (
+            object_path.replace(".urdf", ".stl")
+            .replace(".usda", ".stl")
+            .replace(".usd", ".stl")
+        )
+        ply_path = (
+            object_path.replace(".urdf", ".ply")
+            .replace(".usda", ".ply")
+            .replace(".usd", ".ply")
+        )
 
         if (
             os.path.exists(obj_path)
@@ -300,9 +350,7 @@ class SceneLib:
                             m_y = -w_y / 2
                             m_z = -w_z / 2
                             has_size = True
-            assert (
-                has_size
-            ), f"URDF {object_path} must provide size parameters."
+            assert has_size, f"URDF {object_path} must provide size parameters."
         else:
             raise FileNotFoundError(
                 f"Object file not found: {obj_path}, {stl_path}, or valid URDF"
@@ -353,8 +401,11 @@ class SceneLib:
                 try:
                     fps = obj.motion.fps
                     dt = 1.0 / fps
-                except Exception as e:
-                    logger.warning("Failed to read fps for object at index %d. Defaulting to 30 fps.", idx)
+                except Exception:
+                    logger.warning(
+                        "Failed to read fps for object at index %d. Defaulting to 30 fps.",
+                        idx,
+                    )
                     fps = 30.0
                     dt = 1.0 / fps
 
@@ -367,8 +418,12 @@ class SceneLib:
                 for frame in frames:
                     t = frame.get("translation", obj.translation)
                     r = frame.get("rotation", obj.rotation)
-                    translations_list.append(torch.tensor(t, dtype=torch.float, device=self.device))
-                    rotations_list.append(torch.tensor(r, dtype=torch.float, device=self.device))
+                    translations_list.append(
+                        torch.tensor(t, dtype=torch.float, device=self.device)
+                    )
+                    rotations_list.append(
+                        torch.tensor(r, dtype=torch.float, device=self.device)
+                    )
                 current_start += num_frames
             else:
                 dt = 1.0 / 30.0
@@ -377,8 +432,12 @@ class SceneLib:
                 motion_num_frames_list.append(1)
                 t = obj.translation
                 r = obj.rotation
-                translations_list.append(torch.tensor(t, dtype=torch.float, device=self.device))
-                rotations_list.append(torch.tensor(r, dtype=torch.float, device=self.device))
+                translations_list.append(
+                    torch.tensor(t, dtype=torch.float, device=self.device)
+                )
+                rotations_list.append(
+                    torch.tensor(r, dtype=torch.float, device=self.device)
+                )
                 current_start += 1
 
         total_motion_length = current_start
@@ -388,13 +447,27 @@ class SceneLib:
         else:
             self.object_translations = torch.empty((0, 3), device=self.device)
             self.object_rotations = torch.empty((0, 4), device=self.device)
-        self.motion_lengths = torch.tensor(motion_lengths_list, dtype=torch.float, device=self.device)
+        self.motion_lengths = torch.tensor(
+            motion_lengths_list, dtype=torch.float, device=self.device
+        )
         num_objects = len(all_objects)
-        self.motion_starts = torch.tensor([motion_starts[i] for i in range(num_objects)], dtype=torch.long, device=self.device)
-        self.motion_dts = torch.tensor(motion_dts_list, dtype=torch.float, device=self.device)
-        self.motion_num_frames = torch.tensor(motion_num_frames_list, dtype=torch.long, device=self.device)
+        self.motion_starts = torch.tensor(
+            [motion_starts[i] for i in range(num_objects)],
+            dtype=torch.long,
+            device=self.device,
+        )
+        self.motion_dts = torch.tensor(
+            motion_dts_list, dtype=torch.float, device=self.device
+        )
+        self.motion_num_frames = torch.tensor(
+            motion_num_frames_list, dtype=torch.long, device=self.device
+        )
 
-        logger.info("Combined motion data for %d objects with total frames: %d", num_objects, total_motion_length)
+        logger.info(
+            "Combined motion data for %d objects with total frames: %d",
+            num_objects,
+            total_motion_length,
+        )
 
     def _calc_frame_blend(
         self,
@@ -424,7 +497,9 @@ class SceneLib:
 
         return frame_idx0, frame_idx1, blend
 
-    def get_object_pose(self, object_indices: torch.Tensor, time: torch.Tensor) -> ObjectState:
+    def get_object_pose(
+        self, object_indices: torch.Tensor, time: torch.Tensor
+    ) -> ObjectState:
         """
         Get the interpolated poses for multiple objects at given times.
 
@@ -436,7 +511,9 @@ class SceneLib:
             ObjectState: A batched ObjectState with translations (num_envs, 3) and rotations (num_envs, 4).
         """
         if self.motion_starts is None:
-            logger.error("Motion data not combined. Call combine_object_motions() first.")
+            logger.error(
+                "Motion data not combined. Call combine_object_motions() first."
+            )
             raise ValueError("Motion data not combined.")
 
         dt = self.motion_dts[object_indices]
@@ -445,20 +522,28 @@ class SceneLib:
         start_idx = self.motion_starts[object_indices]
 
         t_tensor = time.to(dtype=torch.float, device=self.device)
-        frame_idx0, frame_idx1, blend = self._calc_frame_blend(t_tensor, length, num_frames, dt)
+        frame_idx0, frame_idx1, blend = self._calc_frame_blend(
+            t_tensor, length, num_frames, dt
+        )
         idx0 = start_idx + frame_idx0
         idx1 = start_idx + frame_idx1
 
         translation0 = self.object_translations[idx0]
         translation1 = self.object_translations[idx1]
-        translation = (1 - blend.unsqueeze(-1)) * translation0 + blend.unsqueeze(-1) * translation1
+        translation = (1 - blend.unsqueeze(-1)) * translation0 + blend.unsqueeze(
+            -1
+        ) * translation1
 
         rotation0 = self.object_rotations[idx0]
         rotation1 = self.object_rotations[idx1]
         rotations_list = []
         for i in range(blend.shape[0]):
             # For each element, compute slerp after unsqueezing to add batch dimension
-            rot = torch_utils.slerp(rotation0[i].unsqueeze(0), rotation1[i].unsqueeze(0), blend[i].unsqueeze(0).unsqueeze(-1))
+            rot = torch_utils.slerp(
+                rotation0[i].unsqueeze(0),
+                rotation1[i].unsqueeze(0),
+                blend[i].unsqueeze(0).unsqueeze(-1),
+            )
             rotations_list.append(rot.squeeze(0))
         rotation = torch.stack(rotations_list, dim=0)
 
@@ -489,7 +574,7 @@ class SceneLib:
 # Example usage:
 if __name__ == "__main__":
     import torch
-    
+
     # Define a dummy Terrain for example usage
     class DummyTerrain:
         def __init__(self):
@@ -516,28 +601,26 @@ if __name__ == "__main__":
         motion=ObjectMotion(
             frames=[
                 {"translation": (1.0, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 1.0)},
-                {"translation": (1.5, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 1.0)}
+                {"translation": (1.5, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0, 1.0)},
             ],
-            fps=30.0
+            fps=30.0,
         ),
         options=ObjectOptions(
             vhacd_enabled=True,
             vhacd_params={
                 "resolution": 50000,
                 "max_convex_hulls": 128,
-                "max_num_vertices_per_ch": 64
+                "max_num_vertices_per_ch": 64,
             },
-            fix_base_link=True
-        )
+            fix_base_link=True,
+        ),
     )
 
     obj2 = SceneObject(
         object_path="obstacle.urdf",
         options=ObjectOptions(
-            vhacd_enabled=True,
-            vhacd_params={"resolution": 50000},
-            fix_base_link=True
-        )
+            vhacd_enabled=True, vhacd_params={"resolution": 50000}, fix_base_link=True
+        ),
     )
     scene1 = Scene(id=1, objects=[obj1, obj2])
 
@@ -545,30 +628,40 @@ if __name__ == "__main__":
         object_path="chair.urdf",
         translation=(2.0, 2.0, 0.0),
         options=ObjectOptions(
-            vhacd_enabled=True,
-            vhacd_params={"resolution": 50000},
-            fix_base_link=True
-        )
+            vhacd_enabled=True, vhacd_params={"resolution": 50000}, fix_base_link=True
+        ),
     )
     obj4 = SceneObject(
         object_path="table.urdf",
         translation=(2.5, 2.0, 0.0),
         options=ObjectOptions(
-            vhacd_enabled=True,
-            vhacd_params={"resolution": 50000},
-            fix_base_link=True
-        )
+            vhacd_enabled=True, vhacd_params={"resolution": 50000}, fix_base_link=True
+        ),
     )
     scene2 = Scene(id=2, objects=[obj3, obj4])
 
     scenes = [scene1, scene2]
 
     terrain = DummyTerrain()
-    assigned_scenes = scene_lib.create_scenes(scenes, terrain, replicate_method="random")
+    assigned_scenes = scene_lib.create_scenes(
+        scenes, terrain, replicate_method="random"
+    )
     for idx, scene in enumerate(assigned_scenes):
-        logger.info("Environment %d assigned Scene with objects %s with offset %s", idx, scene.objects, scene.offset)
+        logger.info(
+            "Environment %d assigned Scene with objects %s with offset %s",
+            idx,
+            scene.objects,
+            scene.offset,
+        )
 
     # get_object_pose now returns an ObjectState and combine_object_motions is automatically called in create_scenes()
-    time = 1. / 30 * 0.5
-    pose_obj0 = scene_lib.get_object_pose(object_indices=torch.tensor([0]), time=torch.tensor([time]))
-    logger.info("Pose for object at index 0 at time %s:\nTranslations: %s\nRotations: %s", time, pose_obj0.translations, pose_obj0.rotations)
+    time = 1.0 / 30 * 0.5
+    pose_obj0 = scene_lib.get_object_pose(
+        object_indices=torch.tensor([0]), time=torch.tensor([time])
+    )
+    logger.info(
+        "Pose for object at index 0 at time %s:\nTranslations: %s\nRotations: %s",
+        time,
+        pose_obj0.translations,
+        pose_obj0.rotations,
+    )
