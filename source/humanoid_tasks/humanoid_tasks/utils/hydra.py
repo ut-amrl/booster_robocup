@@ -14,10 +14,15 @@ try:
     from hydra.core.config_store import ConfigStore
     from omegaconf import DictConfig, OmegaConf
 except ImportError:
-    raise ImportError("Hydra is not installed. Please install it by running 'pip install hydra-core'.")
+    raise ImportError(
+        "Hydra is not installed. Please install it by running 'pip install hydra-core'."
+    )
 
 from isaaclab.envs import DirectRLEnvCfg, ManagerBasedRLEnvCfg
-from isaaclab.envs.utils.spaces import replace_env_cfg_spaces_with_strings, replace_strings_with_env_cfg_spaces
+from isaaclab.envs.utils.spaces import (
+    replace_env_cfg_spaces_with_strings,
+    replace_strings_with_env_cfg_spaces,
+)
 from isaaclab.utils import replace_slices_with_strings, replace_strings_with_slices
 
 from isaaclab_tasks.utils.parse_cfg import load_cfg_from_registry
@@ -78,11 +83,15 @@ def hydra_task_config(task_name: str, agent_cfg_entry_point: str) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # register the task to Hydra
-            env_cfg, agent_cfg = register_task_to_hydra(task_name, agent_cfg_entry_point)
+            env_cfg, agent_cfg = register_task_to_hydra(
+                task_name, agent_cfg_entry_point
+            )
 
             # define the new Hydra main function
             @hydra.main(config_path=None, config_name=task_name, version_base="1.3")
-            def hydra_main(hydra_env_cfg: DictConfig, env_cfg=env_cfg, agent_cfg=agent_cfg):
+            def hydra_main(
+                hydra_env_cfg: DictConfig, env_cfg=env_cfg, agent_cfg=agent_cfg
+            ):
                 # convert to a native dictionary
                 hydra_env_cfg = OmegaConf.to_container(hydra_env_cfg, resolve=True)
                 # replace string with slices because OmegaConf does not support slices

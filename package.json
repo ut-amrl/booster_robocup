@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
+    "prettier": "^3.6.2"
+  },
+  "lint-staged": {
+    "**/*.py": [
+      "black --quiet",
+      "ruff check --fix"
+    ]
+  },
+  "scripts": {
+    "prepare": "husky"
+  }
+}

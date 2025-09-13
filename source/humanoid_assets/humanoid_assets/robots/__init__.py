@@ -7,5 +7,5 @@
 # Configuration for different assets.
 ##
 
-from .booster import *
-from .ihmc import *
+from .booster import *  # noqa: F403
+from .ihmc import *  # noqa: F403

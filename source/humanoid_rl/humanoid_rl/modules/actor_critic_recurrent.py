@@ -29,7 +29,8 @@ class ActorCriticRecurrent(ActorCritic):
     ):
         if kwargs:
             print(
-                "ActorCriticRecurrent.__init__ got unexpected arguments, which will be ignored: " + str(kwargs.keys()),
+                "ActorCriticRecurrent.__init__ got unexpected arguments, which will be ignored: "
+                + str(kwargs.keys()),
             )
 
         super().__init__(
@@ -44,8 +45,18 @@ class ActorCriticRecurrent(ActorCritic):
 
         activation = get_activation(activation)
 
-        self.memory_a = Memory(num_actor_obs, type=rnn_type, num_layers=rnn_num_layers, hidden_size=rnn_hidden_size)
-        self.memory_c = Memory(num_critic_obs, type=rnn_type, num_layers=rnn_num_layers, hidden_size=rnn_hidden_size)
+        self.memory_a = Memory(
+            num_actor_obs,
+            type=rnn_type,
+            num_layers=rnn_num_layers,
+            hidden_size=rnn_hidden_size,
+        )
+        self.memory_c = Memory(
+            num_critic_obs,
+            type=rnn_type,
+            num_layers=rnn_num_layers,
+            hidden_size=rnn_hidden_size,
+        )
 
         print(f"Actor RNN: {self.memory_a}")
         print(f"Critic RNN: {self.memory_c}")
@@ -75,7 +86,9 @@ class Memory(torch.nn.Module):
         super().__init__()
         # RNN
         rnn_cls = nn.GRU if type.lower() == "gru" else nn.LSTM
-        self.rnn = rnn_cls(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+        self.rnn = rnn_cls(
+            input_size=input_size, hidden_size=hidden_size, num_layers=num_layers
+        )
         self.hidden_states = None
 
     def forward(self, input, masks=None, hidden_states=None):
@@ -83,7 +96,9 @@ class Memory(torch.nn.Module):
         if batch_mode:
             # batch mode (policy update): need saved hidden states
             if hidden_states is None:
-                raise ValueError("Hidden states not passed to memory module during policy update")
+                raise ValueError(
+                    "Hidden states not passed to memory module during policy update"
+                )
             out, _ = self.rnn(input, hidden_states)
             out = unpad_trajectories(out, masks)
         else:

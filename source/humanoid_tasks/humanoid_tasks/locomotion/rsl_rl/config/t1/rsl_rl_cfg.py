@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 
 import isaaclab.sim as sim_utils
-import isaaclab.terrains as terrain_gen
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg, ViewerCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
@@ -17,10 +16,13 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
-from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, NVIDIA_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
+from isaaclab.utils.assets import (
+    ISAAC_NUCLEUS_DIR,
+    NVIDIA_NUCLEUS_DIR,
+)
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 from isaaclab.utils.noise import AdditiveGaussianNoiseCfg as Gnoise
-from isaaclab.sensors import ContactSensorCfg, RayCasterCfg, patterns
+from isaaclab.sensors import RayCasterCfg, patterns
 
 
 import isaaclab.envs.mdp as mdp
@@ -65,14 +67,15 @@ class SceneCfg(InteractiveSceneCfg):
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         ray_alignment="yaw",
         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=[1.6, 1.0]),
-        debug_vis=True, # visualize the raycast. Turn off for speed
+        debug_vis=True,  # visualize the raycast. Turn off for speed
         mesh_prim_paths=["/World/ground"],
     )
     contact_forces = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/.*",
         history_length=3,
         track_air_time=True,
-        debug_vis=True)
+        debug_vis=True,
+    )
     left_foot = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/ll6",
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Robot/lr6"],
@@ -80,7 +83,8 @@ class SceneCfg(InteractiveSceneCfg):
         # filter_prim_paths_expr=["{ENV_REGEX_NS}/Robot/right_foot_link"],
         history_length=3,
         track_air_time=True,
-        debug_vis=True)
+        debug_vis=True,
+    )
     right_foot = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/lr6",
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Robot/ll6"],
@@ -88,7 +92,8 @@ class SceneCfg(InteractiveSceneCfg):
         # filter_prim_paths_expr=["{ENV_REGEX_NS}/Robot/left_foot_link"],
         history_length=3,
         track_air_time=True,
-        debug_vis=True)
+        debug_vis=True,
+    )
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -126,7 +131,9 @@ class CommandsCfg:
         heading_command=False,
         debug_vis=True,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
-            lin_vel_x=(-1.0, 1.0), lin_vel_y=(-1.0, 1.0), ang_vel_z=(-1.0, 1.0),
+            lin_vel_x=(-1.0, 1.0),
+            lin_vel_y=(-1.0, 1.0),
+            ang_vel_z=(-1.0, 1.0),
         ),
     )
     frequency = humanoid_mdp.FrequencyCommandCfg(
@@ -134,6 +141,7 @@ class CommandsCfg:
         resampling_time_range=(6.0, 8.0),
         range=(2.0, 4.0),
     )
+
 
 @configclass
 class ActionsCfg:
@@ -148,23 +156,38 @@ class ActionsCfg:
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[
-            "joint_al1", "joint_al2", "joint_al3", "joint_al4",
-            "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
+            "joint_al1",
+            "joint_al2",
+            "joint_al3",
+            "joint_al4",
+            "joint_ar1",
+            "joint_ar2",
+            "joint_ar3",
+            "joint_ar4",
             "joint_waist",
-            "joint_ll1", "joint_ll2", "joint_ll3", "joint_ll4", "joint_ll5", "joint_ll6",
-            "joint_lr1", "joint_lr2", "joint_lr3", "joint_lr4", "joint_lr5", "joint_lr6",
+            "joint_ll1",
+            "joint_ll2",
+            "joint_ll3",
+            "joint_ll4",
+            "joint_ll5",
+            "joint_ll6",
+            "joint_lr1",
+            "joint_lr2",
+            "joint_lr3",
+            "joint_lr4",
+            "joint_lr5",
+            "joint_lr6",
         ],
         preserve_order=True,
         scale=0.2,
         use_default_offset=True,
-        clip={".*": (-4.0, 4.0)}
+        clip={".*": (-4.0, 4.0)},
     )
 
 
 @configclass
 class ObservationsCfg:
     """Observation specifications for the MDP."""
-
 
     @configclass
     class PolicyCfg(ObsGroup):
@@ -178,36 +201,94 @@ class ObservationsCfg:
         )
         foot_force = ObsTerm(
             func=humanoid_mdp.contact_sensor,
-            params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="l[lr]6")},
+            params={
+                "sensor_cfg": SceneEntityCfg("contact_forces", body_names="l[lr]6")
+            },
             # noise=Unoise(n_min=-5, n_max=5),
         )
         ground_friction = ObsTerm(
             func=humanoid_mdp.contact_friction,
             params={"asset_cfg": SceneEntityCfg("robot", body_names="l[lr]6")},
-            noise=Unoise(n_min=-0.01, n_max=0.01)
+            noise=Unoise(n_min=-0.01, n_max=0.01),
         )
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Gnoise(mean=0.0, std=0.05))
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Gnoise(mean=0.0, std=0.01))
-        projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Gnoise(mean=0.0, std=0.01))
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                "joint_al1", "joint_al2", "joint_al3", "joint_al4",
-                "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
-                "joint_waist",
-                "joint_ll1", "joint_ll2", "joint_ll3", "joint_ll4", "joint_ll5", "joint_ll6",
-                "joint_lr1", "joint_lr2", "joint_lr3", "joint_lr4", "joint_lr5", "joint_lr6",
-            ], preserve_order=True)}, noise=Gnoise(mean=0.0, std=0.05))
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                "joint_al1", "joint_al2", "joint_al3", "joint_al4",
-                "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
-                "joint_waist",
-                "joint_ll1", "joint_ll2", "joint_ll3", "joint_ll4", "joint_ll5", "joint_ll6",
-                "joint_lr1", "joint_lr2", "joint_lr3", "joint_lr4", "joint_lr5", "joint_lr6",
-            ], preserve_order=True)}, noise=Gnoise(mean=0.0, std=0.5))
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity, noise=Gnoise(mean=0.0, std=0.01)
+        )
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos_rel,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "joint_al1",
+                        "joint_al2",
+                        "joint_al3",
+                        "joint_al4",
+                        "joint_ar1",
+                        "joint_ar2",
+                        "joint_ar3",
+                        "joint_ar4",
+                        "joint_waist",
+                        "joint_ll1",
+                        "joint_ll2",
+                        "joint_ll3",
+                        "joint_ll4",
+                        "joint_ll5",
+                        "joint_ll6",
+                        "joint_lr1",
+                        "joint_lr2",
+                        "joint_lr3",
+                        "joint_lr4",
+                        "joint_lr5",
+                        "joint_lr6",
+                    ],
+                    preserve_order=True,
+                )
+            },
+            noise=Gnoise(mean=0.0, std=0.05),
+        )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "joint_al1",
+                        "joint_al2",
+                        "joint_al3",
+                        "joint_al4",
+                        "joint_ar1",
+                        "joint_ar2",
+                        "joint_ar3",
+                        "joint_ar4",
+                        "joint_waist",
+                        "joint_ll1",
+                        "joint_ll2",
+                        "joint_ll3",
+                        "joint_ll4",
+                        "joint_ll5",
+                        "joint_ll6",
+                        "joint_lr1",
+                        "joint_lr2",
+                        "joint_lr3",
+                        "joint_lr4",
+                        "joint_lr5",
+                        "joint_lr6",
+                    ],
+                    preserve_order=True,
+                )
+            },
+            noise=Gnoise(mean=0.0, std=0.5),
+        )
         actions = ObsTerm(func=mdp.last_action)
-        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        frequency_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "frequency"})
+        velocity_commands = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "base_velocity"}
+        )
+        frequency_command = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "frequency"}
+        )
 
         def __post_init__(self) -> None:
             self.enable_corruption = True
@@ -222,24 +303,76 @@ class ObservationsCfg:
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel)
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel)
         projected_gravity = ObsTerm(func=mdp.projected_gravity)
-        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        frequency_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "frequency"})
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                "joint_al1", "joint_al2", "joint_al3", "joint_al4",
-                "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
-                "joint_waist",
-                "joint_ll1", "joint_ll2", "joint_ll3", "joint_ll4", "joint_ll5", "joint_ll6",
-                "joint_lr1", "joint_lr2", "joint_lr3", "joint_lr4", "joint_lr5", "joint_lr6",
-            ], preserve_order=True)})
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                "joint_al1", "joint_al2", "joint_al3", "joint_al4",
-                "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
-                "joint_waist",
-                "joint_ll1", "joint_ll2", "joint_ll3", "joint_ll4", "joint_ll5", "joint_ll6",
-                "joint_lr1", "joint_lr2", "joint_lr3", "joint_lr4", "joint_lr5", "joint_lr6",
-            ], preserve_order=True)})
+        velocity_commands = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "base_velocity"}
+        )
+        frequency_command = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "frequency"}
+        )
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos_rel,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "joint_al1",
+                        "joint_al2",
+                        "joint_al3",
+                        "joint_al4",
+                        "joint_ar1",
+                        "joint_ar2",
+                        "joint_ar3",
+                        "joint_ar4",
+                        "joint_waist",
+                        "joint_ll1",
+                        "joint_ll2",
+                        "joint_ll3",
+                        "joint_ll4",
+                        "joint_ll5",
+                        "joint_ll6",
+                        "joint_lr1",
+                        "joint_lr2",
+                        "joint_lr3",
+                        "joint_lr4",
+                        "joint_lr5",
+                        "joint_lr6",
+                    ],
+                    preserve_order=True,
+                )
+            },
+        )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "joint_al1",
+                        "joint_al2",
+                        "joint_al3",
+                        "joint_al4",
+                        "joint_ar1",
+                        "joint_ar2",
+                        "joint_ar3",
+                        "joint_ar4",
+                        "joint_waist",
+                        "joint_ll1",
+                        "joint_ll2",
+                        "joint_ll3",
+                        "joint_ll4",
+                        "joint_ll5",
+                        "joint_ll6",
+                        "joint_lr1",
+                        "joint_lr2",
+                        "joint_lr3",
+                        "joint_lr4",
+                        "joint_lr5",
+                        "joint_lr6",
+                    ],
+                    preserve_order=True,
+                )
+            },
+        )
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self) -> None:
@@ -266,9 +399,9 @@ class EventCfg:
             "dynamic_friction_range": (0.4, 0.8),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 64,
-        }
+        },
     )
-    
+
     link_mass = EventTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
@@ -276,7 +409,7 @@ class EventCfg:
             "asset_cfg": SceneEntityCfg("robot"),
             "mass_distribution_params": (0.98, 1.02),
             "operation": "scale",
-            "distribution": "uniform"
+            "distribution": "uniform",
         },
     )
 
@@ -288,7 +421,7 @@ class EventCfg:
             # "asset_cfg": SceneEntityCfg("robot", body_names="Trunk"),
             "mass_distribution_params": (-1.0, 1.0),
             "operation": "add",
-            "distribution": "uniform"
+            "distribution": "uniform",
         },
     )
 
@@ -301,7 +434,7 @@ class EventCfg:
             "damping_distribution_params": (1.0, 2.0),
             "operation": "scale",
             "distribution": "uniform",
-        }
+        },
     )
 
     # reset
@@ -327,7 +460,7 @@ class EventCfg:
             # "asset_cfg": SceneEntityCfg("robot", joint_names=".*"),
             "position_range": (-0.05, 0.05),
             "velocity_range": (-0.5, 0.5),
-        }
+        },
     )
 
     # interval
@@ -354,22 +487,29 @@ class RewardsCfg:
     # -- task
     base_linear_velocity = RewTerm(
         func=humanoid_mdp.base_linear_velocity_reward,
-        weight=15.0, # 5
-        params={"std": 0.5, "ramp_rate": 0.5, "ramp_at_vel": 1.0, "asset_cfg": SceneEntityCfg("robot")},
+        weight=15.0,  # 5
+        params={
+            "std": 0.5,
+            "ramp_rate": 0.5,
+            "ramp_at_vel": 1.0,
+            "asset_cfg": SceneEntityCfg("robot"),
+        },
     )
     base_angular_velocity = RewTerm(
         func=humanoid_mdp.base_angular_velocity_reward,
         weight=5.0,
-        params={"std":0.5, "asset_cfg": SceneEntityCfg("robot")},
+        params={"std": 0.5, "asset_cfg": SceneEntityCfg("robot")},
     )
     air_time = RewTerm(
         func=humanoid_mdp.air_time_reward_cmd_biped,
         weight=5.0,
-        params={"sensor_cfg": SceneEntityCfg(
-            "contact_forces",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        )},
+        params={
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
     foot_clearance = RewTerm(
         func=humanoid_mdp.foot_clearance_reward,
@@ -380,7 +520,7 @@ class RewardsCfg:
             "target_height": 0.1,
             "asset_cfg": SceneEntityCfg(
                 "robot",
-                body_names="l[lr]6"
+                body_names="l[lr]6",
                 # body_names=[".*_foot_link"]
             ),
         },
@@ -393,18 +533,15 @@ class RewardsCfg:
                 "contact_forces",
                 body_names="l[lr]6",
                 # body_names=[".*_foot_link"],
-                preserve_order=False
+                preserve_order=False,
             ),
             "std": 0.1,
             "max_error": 0.2,
-        }
+        },
     )
     base_height = RewTerm(
-        func=humanoid_mdp.target_base_height,
-        weight=1.0,
-        params={
-            "target_height": 0.68
-        })
+        func=humanoid_mdp.target_base_height, weight=1.0, params={"target_height": 0.68}
+    )
     # alive = RewTerm(func=mdp.is_alive, weight=5.0)
 
     # -- penalties
@@ -416,57 +553,65 @@ class RewardsCfg:
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
-                body_names="l[lr]6"
+                body_names="l[lr]6",
                 # body_names=[".*_foot_link"]
             ),
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
-                body_names="l[lr]6"
+                body_names="l[lr]6",
                 # body_names=[".*_foot_link"]
             ),
             "threshold": 1.0,
         },
     )
-    action_smoothness = RewTerm(func=humanoid_mdp.action_smoothness_penalty, weight=-0.2)
+    action_smoothness = RewTerm(
+        func=humanoid_mdp.action_smoothness_penalty, weight=-0.2
+    )
     air_time_variance = RewTerm(
         func=humanoid_mdp.air_time_variance_penalty,
         weight=-1.0,
-        params={"sensor_cfg": SceneEntityCfg(
-            "contact_forces",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        )},
+        params={
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
     foot_impact = RewTerm(
-        func=humanoid_mdp.foot_impact_penalty, weight=-10.0, params={
+        func=humanoid_mdp.foot_impact_penalty,
+        weight=-10.0,
+        params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
-                body_names="l[lr]6"
+                body_names="l[lr]6",
                 # body_names=[".*_foot_link"]
             ),
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
-                body_names="l[lr]6"
+                body_names="l[lr]6",
                 # body_names=[".*_foot_link"]
             ),
             "cutoff": 10.0,
-        }
+        },
     )
     joint_arm_pos = RewTerm(
         func=humanoid_mdp.joint_position_penalty,
         weight=-1.2,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            joint_names=["joint_a[lr].*", "joint_l[lr]2", "joint_waist"]
-        ), "stand_still_scale": 10.0},
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot", joint_names=["joint_a[lr].*", "joint_l[lr]2", "joint_waist"]
+            ),
+            "stand_still_scale": 10.0,
+        },
     )
     joint_leg_pos = RewTerm(
         func=humanoid_mdp.joint_position_penalty,
         weight=-0.05,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            joint_names=["joint_l[lr].*"]
-        ), "stand_still_scale": 20.0},
+        params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names=["joint_l[lr].*"]),
+            "stand_still_scale": 20.0,
+        },
     )
     # TODO make in terms of body wrt to ground, not joint angle
     # ankle_roll_joint_pos_penalty = RewTerm(
@@ -483,7 +628,7 @@ class RewardsCfg:
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
-                joint_names=["joint_[al][lr].*", "joint_waist"]
+                joint_names=["joint_[al][lr].*", "joint_waist"],
                 # joint_names=".*"
             )
         },
@@ -494,7 +639,7 @@ class RewardsCfg:
         params={
             "asset_cfg": SceneEntityCfg(
                 "robot",
-                joint_names=["joint_[al][lr].*", "joint_waist"]
+                joint_names=["joint_[al][lr].*", "joint_waist"],
                 # joint_names=".*"
             )
         },
@@ -502,31 +647,23 @@ class RewardsCfg:
     ankle_joint_acc = RewTerm(
         func=humanoid_mdp.joint_acceleration_penalty,
         weight=-1.0e-3,
-        params={
-            "asset_cfg": SceneEntityCfg(
-                "robot",
-                joint_names=["joint_l[lr][56]"]
-            )
-        },
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["joint_l[lr][56]"])},
     )
     arm_joint_acc = RewTerm(
         func=humanoid_mdp.joint_acceleration_penalty,
         weight=-1.0e-3,
-        params={
-            "asset_cfg": SceneEntityCfg(
-                "robot",
-                joint_names=["joint_a[lr].*"]
-            )
-        },
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["joint_a[lr].*"])},
     )
     joint_torques = RewTerm(
         func=humanoid_mdp.joint_torques_penalty,
         weight=-5.0e-4,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            joint_names=["joint_[al][lr].*", "joint_waist"]
-            # joint_names=".*"
-        )},
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                joint_names=["joint_[al][lr].*", "joint_waist"],
+                # joint_names=".*"
+            )
+        },
     )
     # joint_arm_torques = RewTerm(
     #     func=humanoid_mdp.joint_torques_penalty,
@@ -544,12 +681,15 @@ class RewardsCfg:
     #     )},
     # )
     foot_orientation = RewTerm(
-        func=humanoid_mdp.foot_orientation, weight=-15.0,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        )}
+        func=humanoid_mdp.foot_orientation,
+        weight=-15.0,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
     # foot_lateral_penalty = RewTerm(
     #     func=humanoid_mdp.foot_lateral_penalty, weight=-15.0,
@@ -560,21 +700,28 @@ class RewardsCfg:
     #     )}
     # )
     feet_yaw_diff_penalty = RewTerm(
-        func=humanoid_mdp.feet_yaw_diff_penalty, weight=-5.0,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        )}
+        func=humanoid_mdp.feet_yaw_diff_penalty,
+        weight=-5.0,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            )
+        },
     )
 
     foot_distance = RewTerm(
-        func=humanoid_mdp.foot_distance, weight=-10.0,
-        params={"asset_cfg": SceneEntityCfg(
-            "robot",
-            body_names="l[lr]6"
-            # body_names=[".*_foot_link"]
-        ), "min_dist": 0.3}
+        func=humanoid_mdp.foot_distance,
+        weight=-10.0,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                body_names="l[lr]6",
+                # body_names=[".*_foot_link"]
+            ),
+            "min_dist": 0.3,
+        },
     )
     # heel_toe_stepping_penalty = RewTerm(
     #     func=humanoid_mdp.heel_toe_stepping_penalty, weight=-1.0,
@@ -596,7 +743,7 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     body_height = DoneTerm(
         func=mdp.root_height_below_minimum,
-        params={"minimum_height": 0.4, "asset_cfg": SceneEntityCfg("robot")}
+        params={"minimum_height": 0.4, "asset_cfg": SceneEntityCfg("robot")},
     )
     # non_foot_contact = DoneTerm(
     #     func=mdp.illegal_contact,
@@ -618,10 +765,10 @@ class TerminationsCfg:
             "threshold": 1.0,
             "sensor_cfg": SceneEntityCfg(
                 "left_foot",
-                body_names="ll6"
+                body_names="ll6",
                 # body_names="left_foot_link"
             ),
-        }
+        },
     )
     # right_foot_contact = DoneTerm(
     #     func=humanoid_mdp.illegal_contact_filtered,
@@ -641,7 +788,6 @@ class TerminationsCfg:
     )
 
 
-
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
@@ -653,16 +799,19 @@ class CurriculumCfg:
 # Environment configuration
 ##
 
+
 @configclass
 class T1BaselineCfg(ManagerBasedRLEnvCfg):
     """Configuration for the locomotion velocity-tracking environment."""
 
     # Viewer
-    viewer = ViewerCfg(eye=(12.5, 12.5, 10.5), 
-                        #    lookat=(50.0, 0.0, 0.0),
-                        origin_type="env", 
-                        env_index=0,
-                        asset_name="robot")    # Scene settings
+    viewer = ViewerCfg(
+        eye=(12.5, 12.5, 10.5),
+        #    lookat=(50.0, 0.0, 0.0),
+        origin_type="env",
+        env_index=0,
+        asset_name="robot",
+    )  # Scene settings
     scene: SceneCfg = SceneCfg(num_envs=4096, env_spacing=5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
@@ -697,6 +846,7 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
         self.scene.left_foot.update_period = self.sim.dt
         self.scene.right_foot.update_period = self.sim.dt
         self.observations.critic.enable_corruption = False
+
 
 class T1Baseline_PLAY(T1BaselineCfg):
     def __post_init__(self) -> None:

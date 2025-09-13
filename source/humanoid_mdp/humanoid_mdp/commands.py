@@ -14,6 +14,7 @@ from isaaclab.sensors import ContactSensor
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
 
+
 class FrequencyCommand(CommandTerm):
     r"""Command generator that generates a frequency command from uniform distribution.
 

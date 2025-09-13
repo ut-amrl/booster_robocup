@@ -37,7 +37,9 @@ def import_packages(package_name: str, blacklist_pkgs: list[str] | None = None):
     # Import the package itself
     package = importlib.import_module(package_name)
     # Import all Python files
-    for _ in _walk_packages(package.__path__, package.__name__ + ".", blacklist_pkgs=blacklist_pkgs):
+    for _ in _walk_packages(
+        package.__path__, package.__name__ + ".", blacklist_pkgs=blacklist_pkgs
+    ):
         pass
 
 
@@ -84,4 +86,6 @@ def _walk_packages(
                 # don't traverse path items we've seen before
                 path = [p for p in path if not seen(p)]
 
-                yield from _walk_packages(path, info.name + ".", onerror, blacklist_pkgs)
+                yield from _walk_packages(
+                    path, info.name + ".", onerror, blacklist_pkgs
+                )

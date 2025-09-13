@@ -2,7 +2,14 @@ import os
 import torch
 import copy
 
-def export_policy_as_jit(actor_critic: object, normalizer: object | None, path: str, filename="policy.pt", alg: str ="RSL_RL"):
+
+def export_policy_as_jit(
+    actor_critic: object,
+    normalizer: object | None,
+    path: str,
+    filename="policy.pt",
+    alg: str = "RSL_RL",
+):
     """Export policy into a Torch JIT file.
 
     Args:
@@ -17,7 +24,10 @@ def export_policy_as_jit(actor_critic: object, normalizer: object | None, path: 
         policy_exporter = _TorchPolicyExporter(actor_critic, normalizer)
     policy_exporter.export(path, filename)
 
-def export_policy_as_onnx(actor_critic: object, path: str, filename="policy.onnx", verbose=False) -> None:
+
+def export_policy_as_onnx(
+    actor_critic: object, path: str, filename="policy.onnx", verbose=False
+) -> None:
     """Export policy into a Torch ONNX file.
 
     Args:
@@ -35,7 +45,8 @@ def export_policy_as_onnx(actor_critic: object, path: str, filename="policy.onnx
 
 """
 Helper Classes - Private.
-"""     
+"""
+
 
 class _OnnxPolicyExporter(torch.nn.Module):
     """Exporter of actor-critic into ONNX file."""
@@ -63,8 +74,9 @@ class _OnnxPolicyExporter(torch.nn.Module):
             verbose=self.verbose,
             input_names=["obs"],
             output_names=["actions"],
-            dynamic_axes={}, 
+            dynamic_axes={},
         )
+
 
 class _TorchPolicyExporter(torch.nn.Module):
     """Exporter of actor-critic into JIT file."""
@@ -76,8 +88,13 @@ class _TorchPolicyExporter(torch.nn.Module):
         if self.is_recurrent:
             self.rnn = copy.deepcopy(actor_critic.memory_a.rnn)
             self.rnn.cpu()
-            self.register_buffer("hidden_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size))
-            self.register_buffer("cell_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size))
+            self.register_buffer(
+                "hidden_state",
+                torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size),
+            )
+            self.register_buffer(
+                "cell_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size)
+            )
             self.forward = self.forward_lstm
             self.reset = self.reset_memory
         # copy normalizer if exists
@@ -112,6 +129,7 @@ class _TorchPolicyExporter(torch.nn.Module):
         traced_script_module = torch.jit.script(self)
         traced_script_module.save(path)
 
+
 class _RMAJitPolicyExporter(torch.nn.Module):
     """Exporter of actor-critic into JIT file."""
 
@@ -123,8 +141,13 @@ class _RMAJitPolicyExporter(torch.nn.Module):
         if self.is_recurrent:
             self.rnn = copy.deepcopy(actor_critic.memory_a.rnn)
             self.rnn.cpu()
-            self.register_buffer("hidden_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size))
-            self.register_buffer("cell_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size))
+            self.register_buffer(
+                "hidden_state",
+                torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size),
+            )
+            self.register_buffer(
+                "cell_state", torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size)
+            )
             self.forward = self.forward_lstm
             self.reset = self.reset_memory
         # copy normalizer if exists
@@ -135,19 +158,19 @@ class _RMAJitPolicyExporter(torch.nn.Module):
 
     def forward_lstm(self, obs):
         obs = self.normalizer(obs)
-        x = obs[:, :self.encoder.in_features]
+        x = obs[:, : self.encoder.in_features]
         fts = self.encoder(x)
-        actor_obs = torch.cat((fts, obs[:, self.encoder.in_features:]), dim=-1)
+        actor_obs = torch.cat((fts, obs[:, self.encoder.in_features :]), dim=-1)
         return self.actor(actor_obs)
-    
+
     def forward(self, obs):
         obs = self.normalizer(obs)
-        image_len = 128*128
+        image_len = 128 * 128
         x = obs[:, :image_len]
         fts = self.encoder(x)
         actor_obs = torch.cat((fts, obs[:, image_len:]), dim=-1)
         return self.actor(actor_obs)
-    
+
     @torch.jit.export
     def reset(self):
         pass

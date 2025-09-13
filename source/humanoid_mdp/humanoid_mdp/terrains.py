@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import isaaclab.terrains as terrain_gen
-from isaaclab.sim import RigidBodyMaterialCfg, DeformableBodyMaterialCfg
 
 
 COBBLESTONE_ROAD_CFG = terrain_gen.TerrainGeneratorCfg(
