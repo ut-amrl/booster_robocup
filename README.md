@@ -57,7 +57,7 @@ The following command will take you through the steps of pulling a policy from `
 ### Using Booster-provided Simulation [Todo]
 [https://booster.feishu.cn/wiki/XY6Kwrq1bizif4kq7X9c14twnle]
 
-## Committing to This Repo
+## Contributing to This Repo
 Changes cannot be made directory to `main` by non-admins. Instead, make changes on a feature branch and make a pull request.
 
 This repo is configured with a format check, which PRs must pass.
