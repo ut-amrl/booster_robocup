@@ -129,8 +129,8 @@ def main(
 ):
     """Play with RSL-RL agent."""
     # grab task name for checkpoint path
-    task_name = args_cli.task.split(":")[-1]     # noqa: F841
-    train_task_name = task_name.replace("-Play", "")     # noqa: F841
+    task_name = args_cli.task.split(":")[-1]  # noqa: F841
+    train_task_name = task_name.replace("-Play", "")  # noqa: F841
 
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
