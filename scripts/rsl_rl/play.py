@@ -7,13 +7,13 @@
 
 """Launch Isaac Sim Simulator first."""
 
-import argparse  # noqa: E402
-import sys  # noqa: E402
+import argparse
+import sys
 
-from isaaclab.app import AppLauncher  # noqa: E402
+from isaaclab.app import AppLauncher
 
 # local imports
-import cli_args  # isort: skip  # noqa: E402
+import cli_args  # isort: skip
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
@@ -56,6 +56,18 @@ parser.add_argument(
     default=False,
     help="Run in real-time, if possible.",
 )
+parser.add_argument(
+    "--export_policy",
+    action="store_true",
+    default=False,
+    help="Export the policy as ONNX and JIT.",
+)
+parser.add_argument(
+    "--wandb", action="store_true", default=False, help="Resume with model from WandB."
+)
+parser.add_argument("--wandb_run", type=str, default="", help="Run from WandB.")
+parser.add_argument("--wandb_model", type=str, default="", help="Model from WandB.")
+
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -75,36 +87,37 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-import gymnasium as gym  # noqa: E402
-import os  # noqa: E402
-import time  # noqa: E402
-import torch  # noqa: E402
+import gymnasium as gym
+import os
+import time
+import torch
 
-from rsl_rl.runners import OnPolicyRunner  # noqa: E402
+from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
-from isaaclab.envs import (  # noqa: E402
+from isaaclab.envs import (
     DirectMARLEnv,
     DirectMARLEnvCfg,
     DirectRLEnvCfg,
     ManagerBasedRLEnvCfg,
     multi_agent_to_single_agent,
 )
-from isaaclab.utils.assets import retrieve_file_path  # noqa: E402
-from isaaclab.utils.dict import print_dict  # noqa: E402
-from isaaclab.utils.pretrained_checkpoint import (  # noqa: E402
-    get_published_pretrained_checkpoint,
-)
+from isaaclab.utils.assets import retrieve_file_path
+from isaaclab.utils.dict import print_dict
+from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
 
-from isaaclab_rl.rsl_rl import (  # noqa: E402
-    RslRlOnPolicyRunnerCfg,
+from isaaclab_rl.rsl_rl import (
+    RslRlBaseRunnerCfg,
     RslRlVecEnvWrapper,
     export_policy_as_jit,
     export_policy_as_onnx,
 )
 
-import isaaclab_tasks  # noqa: F401, E402
-from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
-from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
+import isaaclab_tasks  # noqa: F401
+import humanoid_tasks  # noqa: F401
+from isaaclab_tasks.utils import get_checkpoint_path
+from isaaclab_tasks.utils.hydra import hydra_task_config
+
+from humanoid_utils.wandb_utils import load_wandb_policy
 
 # PLACEHOLDER: Extension template (do not remove this comment)
 
@@ -112,15 +125,15 @@ from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
 @hydra_task_config(args_cli.task, args_cli.agent)
 def main(
     env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
-    agent_cfg: RslRlOnPolicyRunnerCfg,
+    agent_cfg: RslRlBaseRunnerCfg,
 ):
     """Play with RSL-RL agent."""
     # grab task name for checkpoint path
-    task_name = args_cli.task.split(":")[-1]
-    train_task_name = task_name.replace("-Play", "")
+    task_name = args_cli.task.split(":")[-1]     # noqa: F841
+    train_task_name = task_name.replace("-Play", "")     # noqa: F841
 
     # override configurations with non-hydra CLI arguments
-    agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+    agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.num_envs = (
         args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
     )
@@ -137,7 +150,7 @@ def main(
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Loading experiment from directory: {log_root_path}")
     if args_cli.use_pretrained_checkpoint:
-        resume_path = get_published_pretrained_checkpoint("rsl_rl", train_task_name)
+        resume_path = get_published_pretrained_checkpoint("rsl_rl", args_cli.task)
         if not resume_path:
             print(
                 "[INFO] Unfortunately a pre-trained checkpoint is currently unavailable for this task."
@@ -145,6 +158,14 @@ def main(
             return
     elif args_cli.checkpoint:
         resume_path = retrieve_file_path(args_cli.checkpoint)
+    elif args_cli.wandb:
+        # load the policy
+        resume_path = ""
+        log_dir = ""
+        # load configuration
+        run_path = args_cli.wandb_run
+        model_name = args_cli.wandb_model
+        resume_path, _ = load_wandb_policy(run_path, model_name, log_root_path)
     else:
         resume_path = get_checkpoint_path(
             log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint
@@ -178,42 +199,58 @@ def main(
 
     print(f"[INFO]: Loading model checkpoint from: {resume_path}")
     # load previously trained model
-    ppo_runner = OnPolicyRunner(
-        env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device
-    )
-    ppo_runner.load(resume_path)
+    if agent_cfg.class_name == "OnPolicyRunner":
+        runner = OnPolicyRunner(
+            env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device
+        )
+    elif agent_cfg.class_name == "DistillationRunner":
+        runner = DistillationRunner(
+            env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device
+        )
+    else:
+        raise ValueError(f"Unsupported runner class: {agent_cfg.class_name}")
+    runner.load(resume_path)
 
     # obtain the trained policy for inference
-    policy = ppo_runner.get_inference_policy(device=env.unwrapped.device)
+    policy = runner.get_inference_policy(device=env.unwrapped.device)
 
     # extract the neural network module
     # we do this in a try-except to maintain backwards compatibility.
     try:
         # version 2.3 onwards
-        policy_nn = ppo_runner.alg.policy
+        policy_nn = runner.alg.policy
     except AttributeError:
         # version 2.2 and below
-        policy_nn = ppo_runner.alg.actor_critic
+        policy_nn = runner.alg.actor_critic
+
+    # extract the normalizer
+    if hasattr(policy_nn, "actor_obs_normalizer"):
+        normalizer = policy_nn.actor_obs_normalizer
+    elif hasattr(policy_nn, "student_obs_normalizer"):
+        normalizer = policy_nn.student_obs_normalizer
+    else:
+        normalizer = None
 
     # export policy to onnx/jit
-    export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")
-    export_policy_as_jit(
-        policy_nn,
-        ppo_runner.obs_normalizer,
-        path=export_model_dir,
-        filename="policy.pt",
-    )
-    export_policy_as_onnx(
-        policy_nn,
-        normalizer=ppo_runner.obs_normalizer,
-        path=export_model_dir,
-        filename="policy.onnx",
-    )
+    if args_cli.export_policy:
+        export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")
+        export_policy_as_jit(
+            policy_nn,
+            normalizer=normalizer,
+            path=export_model_dir,
+            filename="policy.pt",
+        )
+        export_policy_as_onnx(
+            policy_nn,
+            normalizer=normalizer,
+            path=export_model_dir,
+            filename="policy.onnx",
+        )
 
     dt = env.unwrapped.step_dt
 
     # reset environment
-    obs, _ = env.get_observations()
+    obs = env.get_observations()
     timestep = 0
     # simulate environment
     while simulation_app.is_running():
