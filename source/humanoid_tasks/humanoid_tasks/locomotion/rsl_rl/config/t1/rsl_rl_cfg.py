@@ -4,6 +4,7 @@ import math
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+from isaaclab.assets import DeformableObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg, ViewerCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -28,6 +29,7 @@ from isaaclab.sensors import RayCasterCfg, patterns
 import isaaclab.envs.mdp as mdp
 import humanoid_mdp
 from humanoid_assets import T1_CFG
+from humanoid_assets import Soccerball_CFG
 
 
 ##
@@ -59,6 +61,8 @@ class SceneCfg(InteractiveSceneCfg):
         ),
         debug_vis=False,  # show origin of each environment
     )
+    # soccer ball
+    ball: DeformableObjectCfg = Soccerball_CFG.replace(prim_path="{ENV_REGEX_NS}/Ball")
     # robots
     robot: ArticulationCfg = T1_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     # sensors
