@@ -9,4 +9,3 @@
 
 from .booster import *  # noqa: F403
 from .ihmc import *  # noqa: F403
-from .soccerball import *

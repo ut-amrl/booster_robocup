@@ -25,3 +25,4 @@ ISAACLAB_ASSETS_METADATA = toml.load(
 __version__ = ISAACLAB_ASSETS_METADATA["package"]["version"]
 
 from .robots import *  # noqa: E402, F403
+from .props import *  # noqa: E402, F403

@@ -1,29 +1,18 @@
 from __future__ import annotations
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
-from isaaclab.assets import ArticulationCfg
-from isaaclab.assets import DeformableObject, DeformableObjectCfg
-
-import os
-
-EXT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-"""Path to the extension source directory."""
-
-##
-# Configuration
-##
+from isaaclab.assets import DeformableObjectCfg
 
 # Size-5 soccer ball: diameter ~= 0.22 m -> radius ~= 0.11 m
-Soccerball_CFG = DeformableObjectCfg( 
+BALL_CFG = DeformableObjectCfg(
     prim_path="{ENV_REGEX_NS}/Ball",
     spawn=sim_utils.MeshSphereCfg(
-        radius=3.0,
+        radius=0.11,
         deformable_props=sim_utils.DeformableBodyPropertiesCfg(
             deformable_enabled=True,
             self_collision=True,
             # earlier contact helps grabbing / bouncing
-            contact_offset=0.008,    # try 0.005-0.01
+            contact_offset=0.008,  # try 0.005-0.01
             rest_offset=0.0,
             # stability / feel
             solver_position_iteration_count=80,
@@ -34,10 +23,10 @@ Soccerball_CFG = DeformableObjectCfg(
         physics_material=sim_utils.DeformableBodyMaterialCfg(
             # mass ~= density * volume; for r=0.11 -> ~0.00558 m^3
             # 0.43 kg / 0.00558 ~= 77 kg/m^3 (hollow ball approximated as a soft volume)
-            density = 77.0,
+            density=77.0,
             # stiffness & volume preservation ~= "inflation"
-            youngs_modulus=2.0e7,    # try 1e7-5e7
-            poissons_ratio=0.48,    # near-incompressible
+            youngs_modulus=2.0e7,  # try 1e7-5e7
+            poissons_ratio=0.48,  # near-incompressible
             # energy loss / squishiness
             elasticity_damping=0.002,
             damping_scale=0.6,
