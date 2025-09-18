@@ -256,9 +256,6 @@ def main(
         # load previously trained model
         runner.load(resume_path)
     elif args_cli.wandb:
-        # load the policy
-        resume_path = ""
-        log_dir = ""
         # load configuration
         run_path = args_cli.wandb_run
         model_name = args_cli.wandb_model
