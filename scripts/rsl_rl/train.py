@@ -149,7 +149,7 @@ import isaaclab_tasks  # noqa: F401, E402
 import humanoid_tasks  # noqa: F401, E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
-from humanoid_utils.wandb_utils import load_wandb_policy # noqa: E402
+from humanoid_utils.wandb_utils import load_wandb_policy  # noqa: E402
 
 # PLACEHOLDER: Extension template (do not remove this comment)
 
