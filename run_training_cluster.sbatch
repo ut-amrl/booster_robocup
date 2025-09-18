@@ -9,7 +9,7 @@
 #SBATCH --nodes=1                     # Total number of nodes to request
 #SBATCH --tasks=1                     # Total number of tasks (processes) to run
 #SBATCH --gpus-per-node=1             # Number of GPUs per node
-#SBATCH --cpus-per-task=1             # Cores per task
+#SBATCH --cpus-per-task=16             # Cores per task
 #SBATCH --mem=20g                     # Main memory requested
 #SBATCH --time=48:00:00               # Duration of job
 #SBATCH --output=isaac_job_%j.out     # Standard output log file
@@ -23,7 +23,7 @@ echo "Setting environment variables for Singularity..."
 
 # Set environment variables for the container using the SINGULARITYENV_ prefix
 # This is the recommended method.
-export SINGULARITYENV_WANDB_USERNAME="<your username>"
+export SINGULARITYENV_WANDB_USERNAME="<your-wandb-username>"
 
 echo "Running Singularity container..."
 singularity exec --nv \

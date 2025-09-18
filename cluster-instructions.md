@@ -79,6 +79,7 @@ singularity exec --nv \
   --bind $HOME/booster_robocup:/workspace/booster_robocup \
   --bind $HOME/booster_robocup/isaac-sim-cache:/isaac-sim/kit/cache \
   --bind $HOME/booster_robocup/isaac-sim-data:/isaac-sim/kit/data \
+  isaac-lab-ros_w-robocup-packages.sif \
   /bin/bash
 ```
 
