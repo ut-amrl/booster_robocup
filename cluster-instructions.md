@@ -37,7 +37,7 @@ This is the workflow for training policies on the Delta Cluster using an existin
     This will launch a job to pull a pre-built docker image with all dependencies needed to run training. Note that this step may take ~1hr. You can see the job output with
     `tail -f pull_isaaclab_cluster.err` or `tail -f pull_isaaclab_cluster.out`.
 
-    Upon successful completion, there should be a singularity image at `isaac_images/isaac-lab-ros_w-packages.sif`.
+    Upon successful completion, there should be a singularity image at `isaac-lab-ros_w-robocup-packages.sif`.
 
 4. Run the following commands:
     ```
