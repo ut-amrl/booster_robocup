@@ -61,6 +61,13 @@ parser.add_argument(
     default=False,
     help="Export IO descriptors.",
 )
+
+parser.add_argument(
+    "--wandb", action="store_true", default=False, help="Resume with model from WandB."
+)
+parser.add_argument("--wandb_run", type=str, default="", help="Run from WandB.")
+parser.add_argument("--wandb_model", type=str, default="", help="Model from WandB.")
+
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -142,6 +149,7 @@ import isaaclab_tasks  # noqa: F401, E402
 import humanoid_tasks  # noqa: F401, E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from isaaclab_tasks.utils.hydra import hydra_task_config  # noqa: E402
+from humanoid_utils.wandb_utils import load_wandb_policy  # noqa: E402
 
 # PLACEHOLDER: Extension template (do not remove this comment)
 
@@ -245,6 +253,14 @@ def main(
     # load the checkpoint
     if agent_cfg.resume or agent_cfg.algorithm.class_name == "Distillation":
         print(f"[INFO]: Loading model checkpoint from: {resume_path}")
+        # load previously trained model
+        runner.load(resume_path)
+    elif args_cli.wandb:
+        # load configuration
+        run_path = args_cli.wandb_run
+        model_name = args_cli.wandb_model
+        resume_path, _ = load_wandb_policy(run_path, model_name, log_root_path)
+
         # load previously trained model
         runner.load(resume_path)
 
