@@ -441,6 +441,23 @@ class EventCfg:
     )
 
     # reset
+    reset_ball = EventTerm(
+        func=humanoid_mdp.reset_root_state_uniform_polar,
+        mode="reset",
+        params={
+            "asset_cfg": SceneEntityCfg("ball"),
+            "pose_range": {
+                "r": (1.0, 2.0), 
+                "theta": (-math.pi, math.pi),
+                "z": (0.0, 0.5),
+            },
+            "velocity_range": {
+                "r": (0.0, 0.7), 
+                "theta": (-math.pi, math.pi),
+            },
+        }
+    )
+
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
