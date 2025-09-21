@@ -4,7 +4,7 @@ import math
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
-from isaaclab.assets import DeformableObjectCfg
+from isaaclab.assets import RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg, ViewerCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -49,7 +49,7 @@ class SceneCfg(InteractiveSceneCfg):
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
-            restitution_combine_mode="multiply",
+            restitution_combine_mode="max", # multiply prevents the ball from bouncing
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
@@ -61,7 +61,7 @@ class SceneCfg(InteractiveSceneCfg):
         debug_vis=False,  # show origin of each environment
     )
     # soccer ball
-    ball: DeformableObjectCfg = BALL_CFG.replace(prim_path="{ENV_REGEX_NS}/Ball")
+    ball: RigidObjectCfg = BALL_CFG.replace(prim_path="{ENV_REGEX_NS}/Ball")
     # robots
     robot: ArticulationCfg = T1_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     # sensors
@@ -392,6 +392,28 @@ class EventCfg:
     """Configuration for events."""
 
     # startup
+    ball_material = EventTerm(
+        func=mdp.randomize_rigid_body_material,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("ball"),
+            "static_friction_range": (0.60, 1.20),
+            "dynamic_friction_range": (0.45, 0.75),
+            "restitution_range": (0.45, 0.75),
+            "num_buckets": 64,
+        },
+    )
+
+    ball_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("ball"),
+            "mass_distribution_params": (0.41, 0.45),
+            "operation": "abs",
+        },
+    )
+
     physics_material = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",

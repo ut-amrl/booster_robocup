@@ -14,8 +14,8 @@ BALL_CFG = RigidObjectCfg(
         mass_props=sim_utils.MassPropertiesCfg(mass=0.43),
         rigid_props=sim_utils.RigidBodyPropertiesCfg( # all properties are default None
             rigid_body_enabled=True,
-            linear_damping=0.02,
-            angular_damping=0.2,
+            linear_damping=0.2,
+            angular_damping=0.3,
             enable_gyroscopic_forces=True, # keep gyroscopic forces on for realistic spin
             sleep_threshold=1e-5, # low so ball doesn't sleep too aggressively
             # kinematic_enabled=False, # a kinematic body is a body that is moved through animated poses or through user defined poses.
@@ -31,20 +31,20 @@ BALL_CFG = RigidObjectCfg(
         ),
         collision_props=sim_utils.CollisionPropertiesCfg(
             collision_enabled=True, # whether to enable or disable collisions.
-            contact_offset=0.005,   # contact offset (in m). if two objects are closer than the sum of their contact offsets, contact generation begins
-            # rest_offset=None,     # rest offset (in m). the sum of two objects rest offset is how "close" they can be while stay
+            contact_offset=0.01,   # contact offset (in m). if two objects are closer than the sum of their contact offsets, contact generation begins
+            rest_offset=0.0015,     # rest offset (in m). the sum of two objects rest offset is how "close" they can be while stay
             torsional_patch_radius=0.02,        # the size of the contact patch the solver uses to turn penetration into a resisting twist torque. 0 is effectively "off"
             min_torsional_patch_radius = 0.005, # a floor so the effective patch doesn’t collapse to ~0 on very light contacts (edges, tiny normal force)
 
         ),
         physics_material=sim_utils.RigidBodyMaterialCfg(
-            static_friction=0.35,
-            dynamic_friction=0.25,
-            restitution=0.78,
-            restitution_combine_mode="max", # ['average', 'min', 'multiply', 'max'] - the way restitution will be combined during collisions
+            static_friction=0.90,
+            dynamic_friction=0.70,
+            restitution=0.60,
+            # restitution_combine_mode="average", # ['average', 'min', 'multiply', 'max'] - the way restitution will be combined during collisions
             # friction_combine_mode="average",    # ['average', 'min', 'multiply', 'max'] - the way friction will be combined during collisions
-            compliant_contact_stiffness=1e4,    # like a spring, similar to spring constant (higher -> stiffer)
-            compliant_contact_damping=15,       # how much energy is lost after compressing
+            # compliant_contact_stiffness=1e4,    # like a spring, similar to spring constant (higher -> stiffer)
+            # compliant_contact_damping=15,       # how much energy is lost after compressing
         ),
         # visible=True,
         # semantic_tags=None
