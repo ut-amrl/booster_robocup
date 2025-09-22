@@ -7,7 +7,7 @@ This is the workflow for training policies on the Delta Cluster using an existin
 ### Make an Account
 1. Make an account at http://access-ci.org/
 2. Follow all instructions, including setting up Duo
-3. Send Joydeep your username
+3. Send your username to an allocation manager -- the managers are Luisa Mao, Nathan Tsoi, and Arthur Zhang
 
 ### On the Cluster
 1. ssh with the following command:
