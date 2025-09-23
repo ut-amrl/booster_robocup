@@ -21,8 +21,6 @@ from isaaclab.utils.assets import (
     NVIDIA_NUCLEUS_DIR,
 )
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
-from isaaclab.utils.noise import AdditiveGaussianNoiseCfg as Gnoise
-from isaaclab.sensors import RayCasterCfg, patterns
 
 
 import isaaclab.envs.mdp as mdp
@@ -216,8 +214,12 @@ class ObservationsCfg:
         #     params={"asset_cfg": SceneEntityCfg("robot", body_names="l[lr]6")},
         #     noise=Unoise(n_min=-0.01, n_max=0.01),
         # )
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
+        base_lin_vel = ObsTerm(
+            func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
+        )
+        base_ang_vel = ObsTerm(
+            func=mdp.base_ang_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
+        )
         projected_gravity = ObsTerm(
             func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05)
         )
@@ -305,9 +307,15 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
-        projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))
+        base_lin_vel = ObsTerm(
+            func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
+        )
+        base_ang_vel = ObsTerm(
+            func=mdp.base_ang_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
+        )
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05)
+        )
         velocity_commands = ObsTerm(
             func=mdp.generated_commands, params={"command_name": "base_velocity"}
         )
@@ -406,8 +414,6 @@ class EventCfg:
             "torque_range": (-0.0, 0.0),
         },
     )
-
-
 
     # startup
     physics_material = EventTerm(
@@ -538,28 +544,28 @@ class RewardsCfg:
         func=locomotion_mdp.feet_air_time_positive_biped,
         weight=0.25,
         params={
-            "command_name" : "base_velocity",
-            "threshold" : 0.4,
+            "command_name": "base_velocity",
+            "threshold": 0.4,
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
                 body_names="l[lr]6",
                 preserve_order=False,
-            )
-        }
+            ),
+        },
     )
     dof_pos_limits = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names="joint_l[lr]6"),
-        }
+        },
     )
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_l1,
         weight=-0.1,
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=["joint_l[lr][1-3]"]),
-        }
+        },
     )
     joint_lateral_leg_pos = RewTerm(
         func=humanoid_mdp.joint_position_penalty,
@@ -567,7 +573,7 @@ class RewardsCfg:
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=["joint_l[lr]2"]),
             "stand_still_scale": 10.0,
-        }
+        },
     )
     joint_lateral_leg_vel = RewTerm(
         func=humanoid_mdp.joint_velocity_penalty,
@@ -615,13 +621,10 @@ class RewardsCfg:
 
     # -- penalties
     angular_motion = RewTerm(
-        func=humanoid_mdp.angular_motion_penalty, 
+        func=humanoid_mdp.angular_motion_penalty,
         weight=-0.5,
     )
-    base_orientation = RewTerm(
-        func=humanoid_mdp.base_orientation_penalty, 
-        weight=-1.0
-    )
+    base_orientation = RewTerm(func=humanoid_mdp.base_orientation_penalty, weight=-1.0)
     foot_slip = RewTerm(
         func=humanoid_mdp.foot_slip_penalty,
         weight=-0.5,
@@ -640,7 +643,7 @@ class RewardsCfg:
         },
     )
     action_smoothness = RewTerm(
-        func=humanoid_mdp.action_smoothness_penalty, 
+        func=humanoid_mdp.action_smoothness_penalty,
         weight=-1.0,
     )
     air_time_variance = RewTerm(
