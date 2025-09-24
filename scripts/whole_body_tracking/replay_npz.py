@@ -39,8 +39,8 @@ from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 ##
 # Pre-defined configs
 ##
-from whole_body_tracking.robots.booster import T1_CFG
-from whole_body_tracking.tasks.tracking.mdp import MotionLoader
+from humanoid_assets.robots.booster import T1_CFG
+from humanoid_tasks.imitation_learning.whole_body_tracking.mdp import MotionLoader
 
 
 @configclass

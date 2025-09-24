@@ -395,7 +395,7 @@ limitations under the License. -->
     type="revolute">
     <origin
       xyz="0 0.1471 0"
-      rpy="0 0 0" />
+      rpy="0 0 -1.5707" />
     <parent
       link="al3" />
     <child
@@ -629,13 +629,13 @@ limitations under the License. -->
     type="revolute">
     <origin
       xyz="0 -0.1471 0"
-      rpy="0 0 0" />
+      rpy="0 0 1.5707" />
     <parent
       link="ar3" />
     <child
       link="ar4" />
     <axis
-      xyz="0 0 1" />
+      xyz="0 0 -1" />
     <limit
       lower="-2.234021442552742"
       upper="2.234021442552742"
