@@ -70,3 +70,17 @@ T1_CFG = ArticulationCfg(
     },
 )
 """Configuration for the Booster T1 Humanoid robot."""
+
+# This is a placholder. The G1 has actual values here.
+T1_ACTION_SCALE = {}
+for a in T1_CFG.actuators.values():
+    e = a.effort_limit_sim
+    s = a.stiffness
+    names = a.joint_names_expr
+    if not isinstance(e, dict):
+        e = {n: e for n in names}
+    if not isinstance(s, dict):
+        s = {n: s for n in names}
+    for n in names:
+        if n in e and n in s and s[n]:
+            T1_ACTION_SCALE[n] = 2.0 #0.25 * e[n] / s[n]

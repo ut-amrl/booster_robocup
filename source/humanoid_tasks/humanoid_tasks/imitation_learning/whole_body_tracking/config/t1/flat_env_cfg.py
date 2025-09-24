@@ -1,8 +1,8 @@
 from isaaclab.utils import configclass
 
 from humanoid_assets import T1_CFG, T1_ACTION_SCALE
-from whole_body_tracking.config.t1.agents.rsl_rl_ppo_cfg import LOW_FREQ_SCALE
-from whole_body_tracking.tracking_env_cfg import TrackingEnvCfg
+from humanoid_tasks.imitation_learning.whole_body_tracking.config.t1.agents.rsl_rl_ppo_cfg import LOW_FREQ_SCALE
+from humanoid_tasks.imitation_learning.whole_body_tracking.tracking_env_cfg import TrackingEnvCfg
 
 
 @configclass

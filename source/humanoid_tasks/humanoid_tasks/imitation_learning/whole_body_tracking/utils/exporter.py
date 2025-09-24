@@ -11,7 +11,7 @@ import onnx
 from isaaclab.envs import ManagerBasedRLEnv
 from isaaclab_rl.rsl_rl.exporter import _OnnxPolicyExporter
 
-from whole_body_tracking.tasks.tracking.mdp import MotionCommand
+from humanoid_tasks.imitation_learning.whole_body_tracking.mdp import MotionCommand
 
 
 def export_motion_policy_as_onnx(
