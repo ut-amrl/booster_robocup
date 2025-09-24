@@ -214,9 +214,9 @@ class ObservationsCfg:
         #     params={"asset_cfg": SceneEntityCfg("robot", body_names="l[lr]6")},
         #     noise=Unoise(n_min=-0.01, n_max=0.01),
         # )
-        base_lin_vel = ObsTerm(
-            func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
-        )
+        # base_lin_vel = ObsTerm(
+        #     func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
+        # )
         base_ang_vel = ObsTerm(
             func=mdp.base_ang_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
         )
@@ -307,6 +307,18 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
+        foot_force = ObsTerm(
+            func=humanoid_mdp.contact_sensor,
+            params={
+                "sensor_cfg": SceneEntityCfg("contact_forces", body_names="l[lr]6")
+            },
+            # noise=Unoise(n_min=-5, n_max=5),
+        )
+        ground_friction = ObsTerm(
+            func=humanoid_mdp.contact_friction,
+            params={"asset_cfg": SceneEntityCfg("robot", body_names="l[lr]6")},
+            noise=Unoise(n_min=-0.01, n_max=0.01),
+        )
         base_lin_vel = ObsTerm(
             func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1)
         )
