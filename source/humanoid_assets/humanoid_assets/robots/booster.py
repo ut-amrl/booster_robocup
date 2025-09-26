@@ -65,49 +65,49 @@ T1_CFG = ArticulationCfg(
             joint_names_expr=["joint_h.*"],
             stiffness=20,
             damping=0.2,
-            effort_limit=7.0,
+            effort_limit_sim=7.0,
         ),
         "arms": ImplicitActuatorCfg(
             joint_names_expr=["joint_a[lr][1-4]"],
             stiffness=20,
             damping=0.5,
-            effort_limit=10.0,
+            effort_limit_sim=10.0,
         ),
         "l1": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]1"],
             stiffness=200,
             damping=5.0,
-            effort_limit=60.0,
+            effort_limit_sim=60.0,
         ),
         "l2": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]2"],
             stiffness=200,
             damping=5.0,
-            effort_limit=25.0,
+            effort_limit_sim=25.0,
         ),
         "l3": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]3"],
             stiffness=200,
             damping=5.0,
-            effort_limit=30.0,
+            effort_limit_sim=30.0,
         ),
         "l4": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]4"],
             stiffness=200,
             damping=5.0,
-            effort_limit=60.0,
+            effort_limit_sim=60.0,
         ),
         "l5": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]5"],
             stiffness=50,
             damping=1.0,
-            effort_limit=24.0,
+            effort_limit_sim=24.0,
         ),
         "l6": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]6"],
             stiffness=50,
             damping=1.0,
-            effort_limit=15.0,
+            effort_limit_sim=15.0,
         ),
     },
 )
@@ -124,4 +124,5 @@ for a in T1_CFG.actuators.values():
     if not isinstance(s, dict):
         s = {n: s for n in names}
     for n in names:
-        T1_ACTION_SCALE[n] = 1.0 #0.25 * e[n] / s[n]
+        if n in e and n in s and s[n]:
+            T1_ACTION_SCALE[n] = 0.25 * e[n] / s[n]
