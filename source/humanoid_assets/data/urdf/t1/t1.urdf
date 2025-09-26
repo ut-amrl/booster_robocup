@@ -342,7 +342,7 @@ limitations under the License. -->
     <child
       link="al3" />
     <axis
-      xyz="0 1 0" />
+      xyz="0 -1 0" />
     <limit
       lower="-2.0943951023931953"
       upper="0.03490658503988659"

@@ -103,8 +103,36 @@ class CommandsCfg:
 class ActionsCfg:
     """Action specifications for the MDP."""
 
-    joint_pos = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*"], use_default_offset=True)
-
+    joint_pos = mdp.JointPositionActionCfg(
+        asset_name="robot",
+        joint_names=[
+            "joint_al1",
+            "joint_al2",
+            "joint_al3",
+            "joint_al4",
+            "joint_ar1",
+            "joint_ar2",
+            "joint_ar3",
+            "joint_ar4",
+            "joint_waist",
+            "joint_ll1",
+            "joint_ll2",
+            "joint_ll3",
+            "joint_ll4",
+            "joint_ll5",
+            "joint_ll6",
+            "joint_lr1",
+            "joint_lr2",
+            "joint_lr3",
+            "joint_lr4",
+            "joint_lr5",
+            "joint_lr6",
+        ],
+        preserve_order=True,
+        scale=1.0,
+        use_default_offset=True,
+        clip={".*": (-1.0, 1.0)},
+    )
 
 @configclass
 class ObservationsCfg:
@@ -242,7 +270,7 @@ class RewardsCfg:
             "sensor_cfg": SceneEntityCfg(
                 "contact_forces",
                 body_names=[
-                    r"^(?!left_ankle_roll_link$)(?!right_ankle_roll_link$)(?!left_wrist_yaw_link$)(?!right_wrist_yaw_link$).+$"
+                    r"^(?!ll6$)(?!lr6$)(?!al4$)(?!ar4$).+$"
                 ],
             ),
             "threshold": 1.0,
@@ -269,10 +297,10 @@ class TerminationsCfg:
             "command_name": "motion",
             "threshold": 0.25,
             "body_names": [
-                "left_ankle_roll_link",
-                "right_ankle_roll_link",
-                "left_wrist_yaw_link",
-                "right_wrist_yaw_link",
+                "ll6",
+                "lr6",
+                "al4",
+                "ar4",
             ],
         },
     )

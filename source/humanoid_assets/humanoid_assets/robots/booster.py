@@ -44,28 +44,75 @@ T1_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.7),
-        joint_pos={".*": 0.0},
+        joint_pos={"joint_h.*": 0.0,
+                   "joint_a[lr]1": 0.2,
+                   "joint_al2": -1.35,
+                   "joint_ar2": 1.35,
+                   "joint_a[lr]3": 0.0,
+                   "joint_al4": -0.5,
+                   "joint_ar4": 0.5,
+                   "joint_waist": 0.0,
+                   "joint_l[lr]1": -0.2,
+                   "joint_l[lr]2": 0.0,
+                   "joint_l[lr]3": 0.0,
+                   "joint_l[lr]4": 0.4,
+                   "joint_l[lr]5": -0.25,
+                   "joint_l[lr]6": 0.0,
+                   },
     ),
     actuators={
         "head": ImplicitActuatorCfg(
             joint_names_expr=["joint_h.*"],
-            stiffness=30,
-            damping=5,
+            stiffness=20,
+            damping=0.2,
+            effort_limit=7.0,
         ),
         "arms": ImplicitActuatorCfg(
             joint_names_expr=["joint_a[lr][1-4]"],
-            stiffness=30,
-            damping=5,
+            stiffness=20,
+            damping=0.5,
+            effort_limit=10.0,
         ),
         "legs": ImplicitActuatorCfg(
             joint_names_expr=["joint_waist", "joint_l[lr][1-4]"],
             stiffness=200,
-            damping=5,
+            damping=5.0,
         ),
-        "feet": ImplicitActuatorCfg(
-            joint_names_expr=["joint_l[lr][56]"],
-            stiffness=30,
-            damping=5,
+        "l1": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]1"],
+            stiffness=200,
+            damping=5.0,
+            effort_limit=60.0,
+        ),
+        "l2": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]2"],
+            stiffness=200,
+            damping=5.0,
+            effort_limit=25.0,
+        ),
+        "l3": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]3"],
+            stiffness=200,
+            damping=5.0,
+            effort_limit=30.0,
+        ),
+        "l4": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]4"],
+            stiffness=200,
+            damping=5.0,
+            effort_limit=60.0,
+        ),
+        "l5": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]5"],
+            stiffness=50,
+            damping=1.0,
+            effort_limit=24.0,
+        ),
+        "l6": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]6"],
+            stiffness=50,
+            damping=1.0,
+            effort_limit=15.0,
         ),
     },
 )
@@ -82,5 +129,4 @@ for a in T1_CFG.actuators.values():
     if not isinstance(s, dict):
         s = {n: s for n in names}
     for n in names:
-        if n in e and n in s and s[n]:
-            T1_ACTION_SCALE[n] = 2.0 #0.25 * e[n] / s[n]
+        T1_ACTION_SCALE[n] = 1.0 #0.25 * e[n] / s[n]

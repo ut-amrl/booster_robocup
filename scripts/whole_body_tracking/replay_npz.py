@@ -17,6 +17,7 @@ from isaaclab.app import AppLauncher
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Replay converted motions.")
 parser.add_argument("--registry_name", type=str, required=True, help="The name of the wand registry.")
+parser.add_argument("--debug_viz", action="store_true", default=False, help="Enable debug visualization for all robot bodies.")
 
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
@@ -35,6 +36,8 @@ from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
 from isaaclab.sim import SimulationContext
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+from isaaclab.markers import VisualizationMarkersCfg, VisualizationMarkers
+from isaaclab.markers.config import FRAME_MARKER_CFG
 
 ##
 # Pre-defined configs
@@ -59,8 +62,7 @@ class ReplayMotionsSceneCfg(InteractiveSceneCfg):
 
     # articulation
     robot: ArticulationCfg = T1_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-
-
+    
 def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     # Extract scene entities
     robot: Articulation = scene["robot"]
@@ -84,6 +86,21 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         sim.device,
     )
     time_steps = torch.zeros(scene.num_envs, dtype=torch.long, device=sim.device)
+    
+    if args_cli.debug_viz:
+        body_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/Command/pose")
+        body_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+
+        current_body_visualizers = []
+
+        for name in robot.body_names:
+            current_body_visualizers.append(
+                VisualizationMarkers(
+                    body_visualizer_cfg.replace(prim_path="/Visuals/Command/current/" + name)
+                )
+            )
+        for i in range(len(robot.body_names)):
+            current_body_visualizers[i].set_visibility(True)
 
     # Simulation loop
     while simulation_app.is_running():
@@ -103,6 +120,10 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         sim.render()  # We don't want physic (sim.step())
         scene.update(sim_dt)
 
+        if args_cli.debug_viz:
+            for i in range(len(robot.body_names)):
+                current_body_visualizers[i].visualize(robot.data.body_pos_w[:, i], robot.data.body_quat_w[:, i])
+        
         pos_lookat = root_states[0, :3].cpu().numpy()
         sim.set_camera_view(pos_lookat + np.array([2.0, 2.0, 0.5]), pos_lookat)
 
