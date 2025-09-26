@@ -44,7 +44,7 @@ T1_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.7),
-        joint_pos={#"joint_h.*": 0.0,
+        joint_pos={"joint_h.*": 0.0,
                    "joint_a[lr]1": 0.2,
                    "joint_al2": -1.35,
                    "joint_ar2": 1.35,
@@ -61,12 +61,12 @@ T1_CFG = ArticulationCfg(
                    },
     ),
     actuators={
-        # "head": ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_h.*"],
-        #     stiffness=20,
-        #     damping=0.2,
-        #     effort_limit_sim=7.0,
-        # ),
+        "head": ImplicitActuatorCfg(
+            joint_names_expr=["joint_h.*"],
+            stiffness=20,
+            damping=0.2,
+            effort_limit_sim=7.0,
+        ),
         "arms": ImplicitActuatorCfg(
             joint_names_expr=["joint_a[lr][1-4]"],
             stiffness=20,

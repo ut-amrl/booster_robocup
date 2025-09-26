@@ -106,6 +106,7 @@ class ActionsCfg:
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[
+            "joint_h1", "joint_h2",
             "joint_al1", "joint_al2", "joint_al3", "joint_al4",
             "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
             "joint_waist",
