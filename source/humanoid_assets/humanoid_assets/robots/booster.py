@@ -73,11 +73,6 @@ T1_CFG = ArticulationCfg(
             damping=0.5,
             effort_limit=10.0,
         ),
-        "legs": ImplicitActuatorCfg(
-            joint_names_expr=["joint_waist", "joint_l[lr][1-4]"],
-            stiffness=200,
-            damping=5.0,
-        ),
         "l1": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]1"],
             stiffness=200,
