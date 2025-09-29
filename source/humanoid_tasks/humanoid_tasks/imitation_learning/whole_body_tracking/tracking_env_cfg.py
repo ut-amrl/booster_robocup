@@ -299,8 +299,8 @@ class TerminationsCfg:
             "command_name": "motion",
             "threshold": 0.25,
             "body_names": [
-                "ll6",
-                "lr6",
+                "ll5",
+                "lr5",
                 "al4",
                 "ar4",
             ],

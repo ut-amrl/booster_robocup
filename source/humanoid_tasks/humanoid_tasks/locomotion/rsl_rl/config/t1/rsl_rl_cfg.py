@@ -613,6 +613,25 @@ class RewardsCfg:
             "stand_still_scale": 20.0,
         },
     )
+    joint_position_limit_penalty = RewTerm(
+        func=humanoid_mdp.joint_position_limit_penalty,
+        weight=-1.0,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]),
+        },
+    )
+    collision_penalty = RewTerm(
+        func=humanoid_mdp.collision_penalty,
+        weight=-1.0,
+        params={
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces",
+                body_names=[
+                    r"^(?!ll6$)(?!lr6$)(?!al4$)(?!ar4$).+$"
+                ],
+            ),
+            "threshold": 1.0,
+        },
+    )
     # TODO make in terms of body wrt to ground, not joint angle
     # ankle_roll_joint_pos_penalty = RewTerm(
     #     func=humanoid_mdp.joint_position_penalty,
@@ -661,6 +680,17 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg(
                 "robot",
                 joint_names=["joint_[al][lr].*", "joint_waist"],
+                # joint_names=".*"
+            )
+        },
+    )
+    joint_power_penalty = RewTerm(
+        func=humanoid_mdp.joint_power_penalty,
+        weight=-1.0e-5,
+        params={
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                joint_names=[".*"],
                 # joint_names=".*"
             )
         },
