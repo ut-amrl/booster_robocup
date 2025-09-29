@@ -18,7 +18,7 @@ Install Steps:
 
 Start ssh session:
 
-1. ssh into robovision and map the correct ports. This ssh session needs to be kept open while the TurboVNC remote desktop is running.
+1. ssh into robovision and map the correct ports (5901 is shown in the example but everyone needs a unique port). This ssh session needs to be kept open while the TurboVNC remote desktop is running.
     ```
     ssh -Y -L 5901:localhost:5901 <username>@robovision.csres.utexas.edu
 
@@ -61,7 +61,7 @@ On client machine (local computer):
 1. Pull the docker image
     TODO(Luisa): maybe build it instead?
     ```
-    docker pull docker.io/llqqmm/webots_sim:latest
+    docker pull docker.io/llqqmm/webots_docker:latest
     ```
 
 1. Start the docker container with 
