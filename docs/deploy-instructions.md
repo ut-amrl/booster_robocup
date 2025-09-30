@@ -73,7 +73,7 @@ On client machine (local computer):
         -e XAUTHORITY=/tmp/.Xauthority \
         -v /tmp/.X11-unix:/tmp/.X11-unix  \
         --net=host  \
-        localhost/webots_sim:latest
+        docker.io/llqqmm/webots_docker
     ```
 
 1. Check that visualizations and hw acceleration is working
