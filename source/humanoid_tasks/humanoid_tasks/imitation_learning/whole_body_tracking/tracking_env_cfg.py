@@ -106,7 +106,6 @@ class ActionsCfg:
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[
-            "joint_h1", "joint_h2",
             "joint_al1", "joint_al2", "joint_al3", "joint_al4",
             "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
             "joint_waist",
@@ -139,7 +138,6 @@ class ObservationsCfg:
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
         joint_pos = ObsTerm(func=mdp.joint_pos_rel, params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                "joint_h1", "joint_h2",
                 "joint_al1", "joint_al2", "joint_al3", "joint_al4",
                 "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
                 "joint_waist",
@@ -148,7 +146,6 @@ class ObservationsCfg:
             ], preserve_order=True)}, noise=Unoise(n_min=-0.01, n_max=0.01))
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=[
-                
                 "joint_al1", "joint_al2", "joint_al3", "joint_al4",
                 "joint_ar1", "joint_ar2", "joint_ar3", "joint_ar4",
                 "joint_waist",

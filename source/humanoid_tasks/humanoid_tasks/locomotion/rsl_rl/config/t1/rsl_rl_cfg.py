@@ -490,8 +490,8 @@ class RewardsCfg:
         weight=15.0,  # 5
         params={
             "std": 0.5,
-            "ramp_rate": 0.5,
-            "ramp_at_vel": 1.0,
+            # "ramp_rate": 0.5,
+            # "ramp_at_vel": 1.0,
             "asset_cfg": SceneEntityCfg("robot"),
         },
     )

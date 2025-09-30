@@ -342,8 +342,6 @@ def main():
             "joint_lr5",
             "joint_lr6",
             "joint_waist",
-            "joint_h1",
-            "joint_h2",
             "joint_al1",
             "joint_al2",
             "joint_al3",
