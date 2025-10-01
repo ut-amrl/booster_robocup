@@ -42,7 +42,7 @@ parser.add_argument(
     "--num_envs", type=int, default=None, help="Number of environments to simulate."
 )
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
-parser.add_argument("--subtasks", nargs='+', default=None, help="List of environments to test.")
+parser.add_argument("--subtask", type=str, default=None, help="Environment from preset to test.")
 parser.add_argument(
     "--agent",
     type=str,
@@ -74,6 +74,7 @@ parser.add_argument(
 )
 parser.add_argument("--wandb_run", type=str, default="", help="Run from WandB.")
 parser.add_argument("--wandb_model", type=str, default="", help="Model from WandB.")
+parser.add_argument("--wandb_log_run", type=str, default="", help="WandB run to log the results in.")
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -89,16 +90,18 @@ if args_cli.video:
 sys.argv = [sys.argv[0]] + hydra_args
 
 # launch omniverse app
-app_launcher = AppLauncher(args_cli)
+app_launcher = AppLauncher({"/log/level": "error"})
 simulation_app = app_launcher.app
+
+import sys; sys.exit()
 
 """Rest everything follows."""
 
 import gymnasium as gym
 import os
-import copy
 import time
 import torch
+import wandb
 
 from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
@@ -132,10 +135,10 @@ from humanoid_utils.metrics import *
 
 
 preset_tests = {
-    "walk":  ({"speed": 1.0, "uneven": False, "push": False}, ),
-    "run":   ({"speed": 3.0, "uneven": False, "push": False}, ),
+    "walk":   ({"speed": 1.0, "uneven": False, "push": False}, ),
+    "run":    ({"speed": 3.0, "uneven": False, "push": False}, ),
     "uneven": ({"speed": 1.0, "uneven":  True, "push": False}, ),
-    "push":  ({"speed": 1.0, "uneven": False, "push":  True}, ),
+    "push":   ({"speed": 1.0, "uneven": False, "push":  True}, ),
 }
 
 @hydra_task_config(args_cli.task, args_cli.agent)
@@ -148,6 +151,14 @@ def main(
     task_name = args_cli.task.split(":")[-1]  # noqa: F841
     train_task_name = task_name.replace("-Benchmark", "")  # noqa: F841
 
+    if args_cli.subtask not in preset_tests:
+        print(f"[ERROR] Subtask '{args_cli.subtask}' is not recognized. Skipping...")
+        print(f"[INFO] Available subtasks: {list(preset_tests.keys())}")
+        return
+
+    print(f"[INFO] Testing subtask: {args_cli.subtask}")
+    env_cfg.customize_env(preset_tests[args_cli.subtask][0])
+
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.num_envs = (
@@ -157,14 +168,10 @@ def main(
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
     env_cfg.seed = agent_cfg.seed
-
     env_cfg.sim.device = (
         args_cli.device if args_cli.device is not None else env_cfg.sim.device
     )
 
-    if args_cli.subtasks[0] == "all":
-        args_cli.subtasks = list(preset_tests.keys())
-    
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
@@ -190,6 +197,15 @@ def main(
 
     log_dir = os.path.dirname(resume_path)
 
+    if args_cli.wandb_log_run:
+        wandb_log_run = args_cli.wandb_log_run
+    elif args_cli.wandb:
+        print("[INFO] wandb_log_run not set: defaulting to wandb_run.")
+        wandb_log_run = os.path.relpath(log_dir, log_root_path)
+    else:
+        print("[WARNING] wandb_log_run and wandb_run not set: results will not be saved to wandb.")
+        wandb_log_run = ""
+
     # create isaac environment
     env = gym.make(
         args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
@@ -207,7 +223,7 @@ def main(
             "video_length": args_cli.video_length if args_cli.video_length is not None else args_cli.max_length,
             "disable_logger": True,
         }
-        print("[INFO] Recording videos during training.")
+        print("[INFO] Recording videos during testing.")
         print_dict(video_kwargs, nesting=4)
         env = gym.wrappers.RecordVideo(env, **video_kwargs)
 
@@ -264,65 +280,69 @@ def main(
             filename="policy.onnx",
         )
 
-    for subtask in args_cli.subtasks:
-        if subtask not in preset_tests:
-            print(f"[ERROR] Subtask '{subtask}' is not recognized. Skipping...")
-            continue
+    dt = env.unwrapped.step_dt
 
-        print(f"[INFO] Testing subtask: {subtask}")
+    # reset environment
+    obs = env.get_observations()
 
-        env.cfg.customize_env(preset_tests[subtask][0])
+    # begin video recording
+    if args_cli.video:
+        env.env.start_recording(args_cli.subtask)
+        env.env._capture_frame()
 
-        dt = env.unwrapped.step_dt
+    # keep track of metrics
+    alive = torch.ones(env.num_envs, dtype=torch.long)
+    metrics = {
+        "survival_time": SurvivalTime(env.unwrapped), 
+        "movement_error": MovementError(env.unwrapped),
+        "energy": Energy(env.unwrapped),
+        "smoothness": Smoothness(env.unwrapped),
+    }
 
-        # reset environment
-        env.unwrapped.reset(seed=env_cfg.seed)
-        obs = env.get_observations()
+    # simulate environment
+    for timestep in range(1, args_cli.max_length+1):
+        if not simulation_app.is_running(): break
+        start_time = time.time()
 
-        # begin video recording
-        if args_cli.video:
-            env.env.start_recording(subtask)
-            env.env._capture_frame()
+        # can't use inference mode because env.reset modifies tensors
+        with torch.no_grad():
+            # agent stepping
+            actions = policy(obs)
+            # env stepping
+            obs, rewards, dones, extras = env.step(actions)
 
-        # keep track of alive environments
-        alive = torch.ones(env.num_envs, dtype=torch.long)
-        metrics = {
-            "survival_time": SurvivalTime(env.unwrapped), 
-            "movement_error": MovementError(env.unwrapped),
-            "energy": Energy(env.unwrapped),
-            "smoothness": Smoothness(env.unwrapped),
-        }
+        alive &= ~dones.cpu()
+        if not alive.any():
+            break
 
-        # simulate environment
-        for timestep in range(1, args_cli.max_length+1):
-            if not simulation_app.is_running(): break
+        for metric in metrics.values():
+            metric.update(env.unwrapped, alive)
 
-            start_time = time.time()
-
-            # can't use inference mode because env.reset modifies tensors
-            with torch.no_grad():
-                # agent stepping
-                actions = policy(obs)
-                # env stepping
-                obs, rewards, dones, extras = env.step(actions)
-
-            alive &= ~dones.cpu()
-            if not alive.any():
-                break
-
-            for metric in metrics.values():
-                metric.update(env.unwrapped, alive)
-
-            # time delay for real-time evaluation
-            sleep_time = dt - (time.time() - start_time)
-            if args_cli.real_time and sleep_time > 0:
-                time.sleep(sleep_time)
+        # time delay for real-time evaluation
+        sleep_time = dt - (time.time() - start_time)
+        if args_cli.real_time and sleep_time > 0:
+            time.sleep(sleep_time)
         
-        if args_cli.video: env.env.stop_recording()
+    if args_cli.video: env.env.stop_recording()
 
-        print(f"[INFO] Subtask '{subtask}' results:")
-        for name, metric in metrics.items():
-            print(f"  {name}: {metric.compute():.4f}")
+    computed_metrics = {name: metric.compute() for name, metric in metrics.items()}
+    print(f"[INFO] Subtask '{args_cli.subtask}' results:")
+    for name, value in computed_metrics.items():
+        print(f"  {name}: {value:.4f}")
+
+    # # log to wandb
+    # if wandb_log_run:
+    #     wandb.login()
+    #     api = wandb.Api()
+    #     wandb_run = api.run(run_path)
+        
+    #     for name, value in computed_metrics.items():
+    #         wandb_run.
+
+    #         # wandb.log({f"benchmark/{args_cli.subtask}/{name}": metric.compute()})
+
+    #     wandb.finish()
+
 
     # close the env and the simulator
     env.close()
