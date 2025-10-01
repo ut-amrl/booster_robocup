@@ -43,7 +43,7 @@ T1_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.7),
+        pos=(0.0, 0.0, 1.0),
         joint_pos={"joint_h.*": 0.0,
                    "joint_a[lr]1": 0.2,
                    "joint_al2": -1.35,

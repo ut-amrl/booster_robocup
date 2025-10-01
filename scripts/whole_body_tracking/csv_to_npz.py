@@ -350,6 +350,8 @@ def main():
             "joint_ar2",
             "joint_ar3",
             "joint_ar4",
+            "joint_h1",
+            "joint_h2",
         ],
     )
 

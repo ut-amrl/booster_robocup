@@ -26,6 +26,7 @@ class T1FlatEnvCfg(TrackingEnvCfg):
             "al4",
             "ar2",
             "ar4",
+            "h2"
         ]
 
 
