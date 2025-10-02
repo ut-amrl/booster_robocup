@@ -42,7 +42,6 @@ parser.add_argument(
     "--num_envs", type=int, default=None, help="Number of environments to simulate."
 )
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
-parser.add_argument("--subtask", type=str, default=None, help="Environment from preset to test.")
 parser.add_argument(
     "--agent",
     type=str,
@@ -90,10 +89,8 @@ if args_cli.video:
 sys.argv = [sys.argv[0]] + hydra_args
 
 # launch omniverse app
-app_launcher = AppLauncher({"/log/level": "error"})
+app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
-
-import sys; sys.exit()
 
 """Rest everything follows."""
 
@@ -156,14 +153,9 @@ def main(
         print(f"[INFO] Available subtasks: {list(preset_tests.keys())}")
         return
 
-    print(f"[INFO] Testing subtask: {args_cli.subtask}")
-    env_cfg.customize_env(preset_tests[args_cli.subtask][0])
-
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
-    env_cfg.scene.num_envs = (
-        args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
-    )
+    env_cfg.set_num_envs(args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs)
 
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
@@ -210,6 +202,8 @@ def main(
     env = gym.make(
         args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
     )
+
+    env.cfg.fix_env_origins(env)
 
     # convert to single-agent instance if required by the RL algorithm
     if isinstance(env.unwrapped, DirectMARLEnv):
