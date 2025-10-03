@@ -10,6 +10,7 @@ from dataclasses import MISSING
 from isaaclab.utils import configclass
 from isaaclab.managers import CommandTerm, CommandTermCfg
 from isaaclab.sensors import ContactSensor
+from isaaclab.envs.mdp import current_time_s
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
@@ -103,6 +104,119 @@ class FrequencyCommandCfg(CommandTermCfg):
 
     sensor_cfg: SceneEntityCfg = MISSING
     """Name of the sensor in the environment for which the commands are generated."""
+
+    range: tuple[float, float] = MISSING
+    """Distribution ranges for the frequency command."""
+
+class GaitCycleCommand(CommandTerm):
+    r"""Command generator that generates a gait cycle from a frequency sampled from a uniform distribution.
+
+    Given a frequency f, the gait cycle is (cos(2 \pi f t), sin(2 \pi f t)).
+
+    """
+
+    cfg: GaitCycleCommandCfg
+    """The configuration of the command generator."""
+
+    def __init__(self, cfg: GaitCycleCommandCfg, env: ManagerBasedEnv) -> None:
+        """Initialize the command generator.
+
+        Args:
+            cfg: The configuration of the command generator.
+            env: The environment.
+
+        """
+        # initialize the base class
+        super().__init__(cfg, env)
+
+        # crete buffers to store the command
+        # -- command: x vel, y vel, yaw vel, heading
+        self.freq = torch.zeros(self.num_envs, 1, device=self.device)
+        self.phase = torch.zeros(self.num_envs, 1, device=self.device)
+        self.gait_cycle = torch.zeros(self.num_envs, 2, device=self.device)
+        self.metrics["frequency"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["phase"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["gait_cycle_cos"] = torch.zeros(self.num_envs, device=self.device)
+        self.metrics["gait_cycle_sin"] = torch.zeros(self.num_envs, device=self.device)
+        
+        # debugging
+        self.debug_log = dict()
+        self.debug_log["frequency"] = []
+        self.debug_log["phase"] = []
+        self.debug_log["gait_cycle_cos"] = []
+        self.debug_log["gait_cycle_sin"] = []
+        self.debug_log["curr_time_s"] = []
+
+
+
+
+    def __str__(self) -> str:
+        """Return a string representation of the command generator."""
+        msg = "GaitCycleCommand:\n"
+        msg += f"\tCommand dimension: {tuple(self.command.shape[1:])}\n"
+        msg += f"\tResampling time range: {self.cfg.resampling_time_range}\n"
+        return msg
+
+    """
+    Properties
+    """
+
+    @property
+    def command(self) -> torch.Tensor:
+        """The desired base velocity command in the base frame. Shape is (num_envs, 3)."""
+        return self.gait_cycle
+
+    """
+    Implementation specific functions.
+    """
+
+    def _update_metrics(self) -> None:
+        self.metrics["frequency"][:] = self.freq[:,0]
+        self.metrics["phase"][:] = self.phase[:,0]
+        self.metrics["gait_cycle_cos"][:] = self.gait_cycle[:,0]
+        self.metrics["gait_cycle_sin"][:] = self.gait_cycle[:,1]
+
+        # debug
+        # import json
+        # log_filename = "/home/luisamao/booster_robocup/gait_commands.json"
+        # with open(log_filename, 'r') as f:
+        #     data = json.load(f)
+        # data.append(self.debug_log)
+        # with open(log_filename, "w") as f:
+        #     json.dump(data, f, indent=4)
+
+
+
+        self.debug_log["frequency"] = []
+        self.debug_log["phase"] = []
+        self.debug_log["gait_cycle_cos"] = []
+        self.debug_log["gait_cycle_sin"] = []
+        self.debug_log["curr_time_s"] = []
+
+
+    def _resample_command(self, env_ids: Sequence[int]) -> None:
+        # sample frequency commands
+        r = torch.empty(len(env_ids), device=self.device)
+        # -- freq
+        self.freq[env_ids, 0] = r.uniform_(*self.cfg.range)
+        self.phase *= 0.0
+
+    def _update_command(self) -> None:
+        """Post-processes the frequency command."""
+        self.phase[:, :] = self.freq * current_time_s(self._env)
+        self.gait_cycle[:, 0] = torch.cos(2 * 3.1415926 * self.phase)[:,0]
+        self.gait_cycle[:, 1] = torch.sin(2 * 3.1415926 * self.phase)[:,0]
+
+        # self.debug_log["frequency"].append(self.freq[:,0, 0].item())
+        # self.debug_log["phase"].append(self.phase[:, 0, 0].cpu().item())
+        # self.debug_log["gait_cycle_cos"].append(self.gait_cycle[:, 0, 0].item())
+        # self.debug_log["gait_cycle_sin"].append(self.gait_cycle[:, 1, 0].item())
+        # self.debug_log["curr_time_s"].append(current_time_s(self._env, 0).item())
+
+
+@configclass
+class GaitCycleCommandCfg(CommandTermCfg):
+    class_type: type = GaitCycleCommand
 
     range: tuple[float, float] = MISSING
     """Distribution ranges for the frequency command."""

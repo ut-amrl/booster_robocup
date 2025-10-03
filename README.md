@@ -36,7 +36,7 @@ For baseline funcitonality with `rsl_rl`
 
 ```bash
 ./isaaclab.sh -p scripts/rsl_rl/train.py \
-    --task T1-Baseline-v0 \
+    --task T1-Baseline-v1 \
     --headless \
     --video
 ```

@@ -252,15 +252,25 @@ def main(
     # reset environment
     obs = env.get_observations()
     timestep = 0
+    log_actions = []
+    log_policy_obs = []
+    log_env_obs = []
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
-            actions = policy(obs)
+            actions, policy_obs = policy(obs)
+            # zero_actions = torch.zeros_like(actions)
+            # actions = zero_actions
             # env stepping
             obs, _, _, _ = env.step(actions)
+
+            log_actions.append(actions.cpu().numpy().tolist())
+            log_policy_obs.append(policy_obs.cpu().numpy().tolist())
+            log_env_obs.append(obs["policy"].cpu().numpy().tolist())
+            
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -274,6 +284,15 @@ def main(
 
     # close the simulator
     env.close()
+    log_file = "/home/luisamao/booster_robocup/stat.json"
+    log_dict = {
+        "actions": log_actions,
+        "policy_obs": log_policy_obs,
+        "env_obs": log_env_obs,
+    }
+    import json
+    with open(log_file, "w") as f:
+        json.dump(log_dict, f, indent=4, sort_keys=True)
 
 
 if __name__ == "__main__":

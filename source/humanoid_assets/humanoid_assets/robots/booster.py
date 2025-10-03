@@ -44,28 +44,68 @@ T1_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.7),
-        joint_pos={".*": 0.0},
+        joint_pos={"joint_h.*": 0.0,
+                   "joint_a[lr]1": 0.25,
+                   "joint_al2": -1.4,
+                   "joint_al3": 0.0,
+                   "joint_al4": -0.5,
+                   "joint_ar2": 1.4,
+                   "joint_ar3": 0.0,
+                   "joint_ar4": 0.5,
+                   "joint_waist": 0.0,
+                   "joint_l[lr]1": -0.4,
+                   "joint_l[lr]2": 0.0,
+                   "joint_l[lr]3": 0.0,
+                   "joint_l[lr]4": 0.6,
+                   "joint_l[lr]5": -0.25,
+                   "joint_l[lr]6": 0.0,
+                   },
     ),
     actuators={
         "head": ImplicitActuatorCfg(
             joint_names_expr=["joint_h.*"],
-            stiffness=30,
-            damping=5,
+            stiffness=20,
+            damping=0.1,
         ),
-        "arms": ImplicitActuatorCfg(
-            joint_names_expr=["joint_a[lr][1-4]"],
-            stiffness=30,
-            damping=5,
+        "shoulder_pitch" : ImplicitActuatorCfg(
+            joint_names_expr=["joint_a[lr]1"],
+            stiffness=20,
+            damping=0.5,
         ),
-        "legs": ImplicitActuatorCfg(
-            joint_names_expr=["joint_waist", "joint_l[lr][1-4]"],
+        "shoulder_roll" : ImplicitActuatorCfg(
+            joint_names_expr=["joint_a[lr]2"],
+            stiffness=20,
+            damping=1.5,
+        ),
+        "elbows": ImplicitActuatorCfg(
+            joint_names_expr=["joint_a[lr][3-4]"],
+            stiffness=20,
+            damping=0.2,
+        ),
+        "waist": ImplicitActuatorCfg(
+            joint_names_expr=["joint_waist"],
             stiffness=200,
-            damping=5,
+            damping=5.0,
         ),
-        "feet": ImplicitActuatorCfg(
-            joint_names_expr=["joint_l[lr][56]"],
-            stiffness=30,
-            damping=5,
+        "hip_pitch_roll": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr][1-2]"],
+            stiffness=200,
+            damping=7.5,
+        ),
+        "hip_yaw": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]3"],
+            stiffness=200,
+            damping=3.0,
+        ),
+        "knee": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr]4"],
+            stiffness=200,
+            damping=5.5,
+        ),
+        "ankles": ImplicitActuatorCfg(
+            joint_names_expr=["joint_l[lr][5-6]"],
+            stiffness=150,
+            damping=0.5,
         ),
     },
 )
