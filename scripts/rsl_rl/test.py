@@ -131,13 +131,6 @@ from humanoid_utils.metrics import *
 # PLACEHOLDER: Extension template (do not remove this comment)
 
 
-preset_tests = {
-    "walk":   ({"speed": 1.0, "uneven": False, "push": False}, ),
-    "run":    ({"speed": 3.0, "uneven": False, "push": False}, ),
-    "uneven": ({"speed": 1.0, "uneven":  True, "push": False}, ),
-    "push":   ({"speed": 1.0, "uneven": False, "push":  True}, ),
-}
-
 @hydra_task_config(args_cli.task, args_cli.agent)
 def main(
     env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
@@ -147,11 +140,6 @@ def main(
     # grab task name for checkpoint path
     task_name = args_cli.task.split(":")[-1]  # noqa: F841
     train_task_name = task_name.replace("-Benchmark", "")  # noqa: F841
-
-    if args_cli.subtask not in preset_tests:
-        print(f"[ERROR] Subtask '{args_cli.subtask}' is not recognized. Skipping...")
-        print(f"[INFO] Available subtasks: {list(preset_tests.keys())}")
-        return
 
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
@@ -203,8 +191,6 @@ def main(
         args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
     )
 
-    env.cfg.fix_env_origins(env)
-
     # convert to single-agent instance if required by the RL algorithm
     if isinstance(env.unwrapped, DirectMARLEnv):
         env = multi_agent_to_single_agent(env)
@@ -212,8 +198,8 @@ def main(
     # wrap for video recording
     if args_cli.video:
         video_kwargs = {
-            "video_folder": os.path.join(log_dir, "videos", "play"),
-            "step_trigger": lambda step: False,
+            "video_folder": os.path.join(log_dir, "videos", "test"),
+            "step_trigger": lambda step: step==0,
             "video_length": args_cli.video_length if args_cli.video_length is not None else args_cli.max_length,
             "disable_logger": True,
         }
@@ -279,11 +265,6 @@ def main(
     # reset environment
     obs = env.get_observations()
 
-    # begin video recording
-    if args_cli.video:
-        env.env.start_recording(args_cli.subtask)
-        env.env._capture_frame()
-
     # keep track of metrics
     alive = torch.ones(env.num_envs, dtype=torch.long)
     metrics = {
@@ -317,12 +298,17 @@ def main(
         if args_cli.real_time and sleep_time > 0:
             time.sleep(sleep_time)
         
-    if args_cli.video: env.env.stop_recording()
+    # if args_cli.video: env.env.stop_recording()
 
-    computed_metrics = {name: metric.compute() for name, metric in metrics.items()}
-    print(f"[INFO] Subtask '{args_cli.subtask}' results:")
-    for name, value in computed_metrics.items():
-        print(f"  {name}: {value:.4f}")
+    computed_metrics = {name: metric.compute(env.unwrapped.cfg.subtask_names) for name, metric in metrics.items()}
+    print(f"[INFO] Test results:")
+    for metric_name, subtask_metrics in computed_metrics.items():
+        print(f"  {metric_name}:")
+        for subtask_name, value in subtask_metrics.items():
+            print(f"    {subtask_name}: {value:.4f}")
+    # print(f"[INFO] Subtask '{args_cli.subtask}' results:")
+    # for name, value in computed_metrics.items():
+    #     print(f"  {name}: {value:.4f}")
 
     # # log to wandb
     # if wandb_log_run:

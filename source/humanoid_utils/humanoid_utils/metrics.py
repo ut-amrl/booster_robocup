@@ -10,8 +10,10 @@ class SurvivalTime:
     def update(self, env: ManagerBasedRLEnv, alive: torch.LongTensor) -> None:
         self.duration += alive * env.step_dt
     
-    def compute(self) -> torch.Tensor:
-        return self.duration.mean()
+    def compute(self, subtask_names) -> torch.Tensor:
+        n = len(self.duration) // len(subtask_names)
+        results = {name: self.duration[i*n:(i+1)*n].mean().item() for i, name in enumerate(subtask_names)}
+        return results
 
 class MovementError:
     """Average tracking error in m/s, averaged again across environments."""
@@ -28,8 +30,11 @@ class MovementError:
         self.distance += alive * error.cpu() * env.step_dt
         self.duration += alive * env.step_dt
 
-    def compute(self) -> torch.Tensor:
-        return (self.distance / self.duration).mean()
+    def compute(self, subtask_names) -> torch.Tensor:
+        movement_error = self.distance / self.duration
+        n = len(movement_error) // len(subtask_names)
+        results = {name: movement_error[i*n:(i+1)*n].mean().item() for i, name in enumerate(subtask_names)}
+        return results
 
 class Energy:
     """Average total joint energy consumption in J/s, averaged again across environments."""
@@ -44,8 +49,11 @@ class Energy:
         self.work += alive * power.cpu() * env.step_dt
         self.duration += alive * env.step_dt
     
-    def compute(self) -> torch.Tensor:
-        return (self.work / self.duration).mean()
+    def compute(self, subtask_names) -> torch.Tensor:
+        energy = self.work / self.duration
+        n = len(energy) // len(subtask_names)
+        results = {name: energy[i*n:(i+1)*n].mean().item() for i, name in enumerate(subtask_names)}
+        return results
 
 class Smoothness:
     """Average total joint jerk in m/s^3, averaged again across environments."""
@@ -63,5 +71,8 @@ class Smoothness:
 
         self.last_acc = joint_acc
     
-    def compute(self) -> torch.Tensor:
-        return (self.acc_delta / self.duration).mean()
+    def compute(self, subtask_names) -> torch.Tensor:
+        smoothness = self.acc_delta / self.duration
+        n = len(smoothness) // len(subtask_names)
+        results = {name: smoothness[i*n:(i+1)*n].mean().item() for i, name in enumerate(subtask_names)}
+        return results
