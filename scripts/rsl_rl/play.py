@@ -262,9 +262,6 @@ def main(
         with torch.inference_mode():
             # agent stepping
             actions, policy_obs = policy(obs)
-            # zero_actions = torch.zeros_like(actions)
-            # actions = zero_actions
-            # env stepping
             obs, _, _, _ = env.step(actions)
 
             log_actions.append(actions.cpu().numpy().tolist())

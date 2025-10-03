@@ -154,6 +154,7 @@ class ActionsCfg:
     - Rewards (foot roll, etc)
     """
 
+    # joint_pos = mdp.EMAJointPositionToLimitsActionsCGF(
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
         joint_names=[
@@ -372,26 +373,26 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    base_external_force_torque = EventTerm( # how to get these as privileged obs?
-        func=mdp.apply_external_force_torque,
-        mode="interval",
-        interval_range_s=(5.0, 5.1),
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
-            "force_range": (-10.0, 10.0),
-            "torque_range": (-2.0, 2.0),
-        },
-    )
-    base_external_velocity = EventTerm(
-        func=mdp.push_by_setting_velocity,
-        mode="interval",
-        interval_range_s=(2.0, 2.1),
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
-            "velocity_range": {"x":(-.1, .1), "y":(-.1, .1), "z":(-.1, .1),
-                               "roll":(-.02, .02), "pitch":(-.02, .02), "yaw":(-.02, .02)},
-        },
-    )
+    # base_external_force_torque = EventTerm( # how to get these as privileged obs?
+    #     func=mdp.apply_external_force_torque,
+    #     mode="interval",
+    #     interval_range_s=(5.0, 5.1),
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
+    #         "force_range": (-10.0, 10.0),
+    #         "torque_range": (-2.0, 2.0),
+    #     },
+    # )
+    # base_external_velocity = EventTerm(
+    #     func=mdp.push_by_setting_velocity,
+    #     mode="interval",
+    #     interval_range_s=(2.0, 2.1),
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
+    #         "velocity_range": {"x":(-.1, .1), "y":(-.1, .1), "z":(-.1, .1),
+    #                            "roll":(-.02, .02), "pitch":(-.02, .02), "yaw":(-.02, .02)},
+    #     },
+    # )
 
     # startup
     physics_material = EventTerm(
@@ -401,7 +402,7 @@ class EventCfg:
             "asset_cfg": SceneEntityCfg("robot", body_names="l[lr]6"),
             # "asset_cfg": SceneEntityCfg("robot", body_names=[".*_foot_link"]),
             "static_friction_range": (0.3, 2.0),
-            "dynamic_friction_range": (0.3, 1.0),
+            "dynamic_friction_range": (0.3, 2.0),
             "restitution_range": (0.1, 0.9),
             "num_buckets": 64,
         },
@@ -438,9 +439,12 @@ class EventCfg:
             "asset_cfg": SceneEntityCfg("robot"),
             "pose_range": {"yaw": (-math.pi, math.pi)},
             "velocity_range": {
-                "x": (-1.0, 1.0),
-                "y": (-0.5, 0.5),
-                "yaw": (-1.0, 1.0),
+                "x": (0, 0),
+                "y": (0, 0),
+                "yaw": (0, 0),
+                # "x": (-1.0, 1.0),
+                # "y": (-0.5, 0.5),
+                # "yaw": (-1.0, 1.0),
             },
         },
     )
@@ -451,10 +455,23 @@ class EventCfg:
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=["joint_l[lr].*"]),
             # "asset_cfg": SceneEntityCfg("robot", joint_names=".*"),
-            "position_range": (-0.2, 0.2),
-            "velocity_range": (-2.5, 2.5),
+            "position_range": (0, 0),
+            "velocity_range": (0, 0),
+            # "position_range": (-0.2, 0.2),
+            # "velocity_range": (-2.5, 2.5),
         },
     )
+
+    # stiffness_damping = EventTerm(
+    #     func=mdp.randomize_fixed_tendon_parameters,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot"),
+    #         "operation": "scale",
+    #         "damping_distribution_params": [0.95, 1.05],
+    #         "limit_stiffness_distribution_params": [0.95, 1.05],
+    #     },
+    # )
 
     # interval
     # push_robot = EventTerm(
@@ -575,7 +592,13 @@ class RewardsCfg:
                                 body_names = ["ll6", "lr6"])}
     )
     feet_yaw_diff = RewTerm(
-        func = humanoid_mdp.reward_feet_yaw,
+        func = humanoid_mdp.reward_feet_yaw_diff,
+        weight =  -1.,
+        params = {"asset_cfg": SceneEntityCfg("robot",
+                                body_names = ["ll6", "lr6"])}
+    )
+    feet_yaw_mean = RewTerm(
+        func = humanoid_mdp.reward_feet_yaw_mean,
         weight =  -1.,
         params = {"asset_cfg": SceneEntityCfg("robot",
                                 body_names = ["ll6", "lr6"])}

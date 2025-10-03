@@ -24,7 +24,8 @@ T1_CFG = ArticulationCfg(
             )
         ),
         make_instanceable=True,
-        asset_path=f"{EXT_DIR}/data/urdf/t1/t1.urdf",
+        # asset_path=f"{EXT_DIR}/data/urdf/t1/t1.urdf",
+        asset_path=f"{EXT_DIR}/data/urdf/t1/T1_locomotion.urdf",
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
@@ -43,16 +44,17 @@ T1_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.7),
-        joint_pos={"joint_h.*": 0.0,
-                   "joint_a[lr]1": 0.25,
-                   "joint_al2": -1.4,
-                   "joint_al3": 0.0,
-                   "joint_al4": -0.5,
-                   "joint_ar2": 1.4,
-                   "joint_ar3": 0.0,
-                   "joint_ar4": 0.5,
-                   "joint_waist": 0.0,
+        pos=(0.0, 0.0, 0.72), # maybe needs nonzero height
+        joint_pos={
+                #    "joint_h.*": 0.0,
+                #    "joint_a[lr]1": 0.25,
+                #    "joint_al2": -1.4,
+                #    "joint_al3": 0.0,
+                #    "joint_al4": -0.5,
+                #    "joint_ar2": 1.4,
+                #    "joint_ar3": 0.0,
+                #    "joint_ar4": 0.5,
+                #    "joint_waist": 0.0,
                    "joint_l[lr]1": -0.4,
                    "joint_l[lr]2": 0.0,
                    "joint_l[lr]3": 0.0,
@@ -62,50 +64,50 @@ T1_CFG = ArticulationCfg(
                    },
     ),
     actuators={
-        "head": ImplicitActuatorCfg(
-            joint_names_expr=["joint_h.*"],
-            stiffness=20,
-            damping=0.1,
-        ),
-        "shoulder_pitch" : ImplicitActuatorCfg(
-            joint_names_expr=["joint_a[lr]1"],
-            stiffness=20,
-            damping=0.5,
-        ),
-        "shoulder_roll" : ImplicitActuatorCfg(
-            joint_names_expr=["joint_a[lr]2"],
-            stiffness=20,
-            damping=1.5,
-        ),
-        "elbows": ImplicitActuatorCfg(
-            joint_names_expr=["joint_a[lr][3-4]"],
-            stiffness=20,
-            damping=0.2,
-        ),
-        "waist": ImplicitActuatorCfg(
-            joint_names_expr=["joint_waist"],
-            stiffness=200,
-            damping=5.0,
-        ),
+        # "head": ImplicitActuatorCfg(
+        #     joint_names_expr=["joint_h.*"],
+        #     stiffness=20,
+        #     damping=0.1,
+        # ),
+        # "shoulder_pitch" : ImplicitActuatorCfg(
+        #     joint_names_expr=["joint_a[lr]1"],
+        #     stiffness=20,
+        #     damping=0.5,
+        # ),
+        # "shoulder_roll" : ImplicitActuatorCfg(
+        #     joint_names_expr=["joint_a[lr]2"],
+        #     stiffness=20,
+        #     damping=1.5,
+        # ),
+        # "elbows": ImplicitActuatorCfg(
+        #     joint_names_expr=["joint_a[lr][3-4]"],
+        #     stiffness=20,
+        #     damping=0.2,
+        # ),
+        # "waist": ImplicitActuatorCfg(
+        #     joint_names_expr=["joint_waist"],
+        #     stiffness=200,
+        #     damping=5.0,
+        # ),
         "hip_pitch_roll": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr][1-2]"],
             stiffness=200,
-            damping=7.5,
+            damping=5.0,
         ),
         "hip_yaw": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]3"],
             stiffness=200,
-            damping=3.0,
+            damping=5.0,
         ),
         "knee": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr]4"],
             stiffness=200,
-            damping=5.5,
+            damping=5.0,
         ),
         "ankles": ImplicitActuatorCfg(
             joint_names_expr=["joint_l[lr][5-6]"],
-            stiffness=150,
-            damping=0.5,
+            stiffness=50,
+            damping=1.0,
         ),
     },
 )

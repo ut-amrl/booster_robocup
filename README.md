@@ -47,7 +47,7 @@ The following command will take you through the steps of pulling a policy from `
 
 ```
 ./isaaclab.sh -p scripts/rsl_rl/play.py \
-    --task T1-Baseline-Play-v0 \
+    --task T1-Baseline-Play-v1 \
     --num_envs 1 \
     --wandb \
     --headless \

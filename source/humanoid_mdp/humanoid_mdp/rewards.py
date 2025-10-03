@@ -234,6 +234,29 @@ def reward_feet_yaw(
 ) -> torch.Tensor:
     return foot_orientation(env, asset_cfg)
 
+def reward_feet_yaw_diff(
+    env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    feet_quat = asset.data.body_link_quat_w[:, asset_cfg.body_ids]
+    feet_quat = rearrange(feet_quat, 'b n c -> (b n) c')
+    feet_yaw = math_utils.euler_xyz_from_quat(feet_quat)[-1]
+    feet_yaw = rearrange(feet_yaw, '(b n)-> b n', n = len(asset_cfg.body_ids))
+    return torch.square((feet_yaw[:, 1] - feet_yaw[:, 0] + torch.pi) % (2*torch.pi) - torch.pi)
+
+def reward_feet_yaw_mean(
+    env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    feet_quat = asset.data.body_link_quat_w[:, asset_cfg.body_ids]
+    feet_quat = rearrange(feet_quat, 'b n c -> (b n) c')
+    feet_yaw = math_utils.euler_xyz_from_quat(feet_quat)[-1]
+    feet_yaw = rearrange(feet_yaw, '(b n)-> b n', n = len(asset_cfg.body_ids))
+    feet_yaw_mean = feet_yaw.mean(dim=-1) + torch.pi * (torch.abs(feet_yaw[:, 1] - feet_yaw[:, 0]) > torch.pi)
+    base_quat = asset.data.root_link_quat_w
+    base_yaw = math_utils.euler_xyz_from_quat(base_quat)[-1]
+    return torch.square((base_yaw - feet_yaw_mean + torch.pi) % (2 * torch.pi) - torch.pi)
+
 def reward_feet_roll(
     env: ManagerBasedRLEnvCfg, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
 ) -> torch.Tensor:
