@@ -8,6 +8,7 @@
 """Launch Isaac Sim Simulator first."""
 
 import argparse
+import json
 import sys
 
 from isaaclab.app import AppLauncher
@@ -73,7 +74,7 @@ parser.add_argument(
 )
 parser.add_argument("--wandb_run", type=str, default="", help="Run from WandB.")
 parser.add_argument("--wandb_model", type=str, default="", help="Model from WandB.")
-parser.add_argument("--wandb_log_run", type=str, default="", help="WandB run to log the results in.")
+parser.add_argument("--wandb_log", action="store_true", default=False, help="Log results to WandB (if --wandb is used)")
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -152,6 +153,9 @@ def main(
         args_cli.device if args_cli.device is not None else env_cfg.sim.device
     )
 
+    # set episode length
+    env_cfg.episode_length_s = args_cli.max_length * env_cfg.sim.dt * env_cfg.decimation
+
     # specify directory for logging experiments
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
@@ -177,15 +181,6 @@ def main(
 
     log_dir = os.path.dirname(resume_path)
 
-    if args_cli.wandb_log_run:
-        wandb_log_run = args_cli.wandb_log_run
-    elif args_cli.wandb:
-        print("[INFO] wandb_log_run not set: defaulting to wandb_run.")
-        wandb_log_run = os.path.relpath(log_dir, log_root_path)
-    else:
-        print("[WARNING] wandb_log_run and wandb_run not set: results will not be saved to wandb.")
-        wandb_log_run = ""
-
     # create isaac environment
     env = gym.make(
         args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None
@@ -199,7 +194,7 @@ def main(
     if args_cli.video:
         video_kwargs = {
             "video_folder": os.path.join(log_dir, "videos", "test"),
-            "step_trigger": lambda step: step==0,
+            "step_trigger": lambda step: False,
             "video_length": args_cli.video_length if args_cli.video_length is not None else args_cli.max_length,
             "disable_logger": True,
         }
@@ -246,7 +241,7 @@ def main(
 
     # export policy to onnx/jit
     if args_cli.export_policy:
-        export_model_dir = os.path.join(os.path.dirname(resume_path), "exported", subtask)
+        export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")
         export_policy_as_jit(
             policy_nn,
             normalizer=normalizer,
@@ -261,6 +256,11 @@ def main(
         )
 
     dt = env.unwrapped.step_dt
+
+    # record video
+    if args_cli.video:
+        video_name = "benchmark-video"
+        env.env.start_recording(video_name)
 
     # reset environment
     obs = env.get_observations()
@@ -297,32 +297,52 @@ def main(
         sleep_time = dt - (time.time() - start_time)
         if args_cli.real_time and sleep_time > 0:
             time.sleep(sleep_time)
-        
-    # if args_cli.video: env.env.stop_recording()
 
+    if args_cli.video:
+        env.env.stop_recording()
+        
     computed_metrics = {name: metric.compute(env.unwrapped.cfg.subtask_names) for name, metric in metrics.items()}
-    print(f"[INFO] Test results:")
-    for metric_name, subtask_metrics in computed_metrics.items():
-        print(f"  {metric_name}:")
-        for subtask_name, value in subtask_metrics.items():
-            print(f"    {subtask_name}: {value:.4f}")
-    # print(f"[INFO] Subtask '{args_cli.subtask}' results:")
-    # for name, value in computed_metrics.items():
-    #     print(f"  {name}: {value:.4f}")
 
-    # # log to wandb
-    # if wandb_log_run:
-    #     wandb.login()
-    #     api = wandb.Api()
-    #     wandb_run = api.run(run_path)
-        
-    #     for name, value in computed_metrics.items():
-    #         wandb_run.
+    # print metrics
+    print("Test results:")
+    print_dict(computed_metrics)
 
-    #         # wandb.log({f"benchmark/{args_cli.subtask}/{name}": metric.compute()})
+    # log to file
+    log_file = os.path.join(log_dir, "benchmarks.json")
+    with open(log_file, "w") as f:
+        log_results = {
+            "date": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "model_path": resume_path,
+            "metrics": computed_metrics,
+        }
+        json.dump(log_results, f, indent=2)
 
-    #     wandb.finish()
+    # log to wandb
+    if args_cli.wandb and args_cli.wandb_log:
+        split_path = os.path.relpath(log_dir, log_root_path).split(os.path.sep)
+        entity, project, run_id = split_path[0], split_path[1], split_path[-1]
 
+        try:
+            run = wandb.init(entity=entity, project=project, id=run_id, resume="allow")
+        except wandb.errors.AuthenticationError:
+            old_run_name = wandb.Api().run(f"{entity}/{project}/{run_id}").name
+            run = wandb.init(
+                name=f"{old_run_name}_Benchmark",
+                entity=os.environ["WANDB_USERNAME"], 
+                project=agent_cfg["wandb_project"]
+            )
+            print(f"You do not have permission to update runs! Created a new run at {run.url}")
+
+        flat = {f"{m}/{s}": v for m, subs in computed_metrics.items() for s, v in subs.items()}
+        wandb.log(flat)
+
+        artifact = wandb.Artifact("benchmark-results", type="evaluation")
+        artifact.add_file(log_file)
+        if args_cli.video:
+            artifact.add_file(os.path.join(log_dir, "videos", "test", f"{video_name}.mp4"))
+        run.log_artifact(artifact)
+
+        run.finish()
 
     # close the env and the simulator
     env.close()

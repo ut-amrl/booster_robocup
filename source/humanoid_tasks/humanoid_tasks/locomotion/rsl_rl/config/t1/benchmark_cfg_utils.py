@@ -2,6 +2,7 @@ import sys
 from typing import Callable, Dict, Sequence
 
 import torch
+from isaaclab.assets import RigidObject
 from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnv
 from isaaclab.managers import CommandTermCfg, EventTermCfg, ManagerTermBase, SceneEntityCfg
 
@@ -102,3 +103,41 @@ class reset_root_state_uniform_once(ManagerTermBase):
         )
 
         self.alive[env_ids] = False
+
+def subterrain_out_of_bounds(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    distance_buffer: float = 3.0,
+) -> torch.Tensor:
+    """Terminate when the actor moves too close to the edge of the subterrain.
+
+    If the actor moves too close to the edge of the subterrain, the termination is
+    activated. The env origin is assumed to be the equal to the terrain origin.
+    """
+    if env.scene.cfg.terrain.terrain_type == "plane":
+        return torch.zeros(
+            env.num_envs, dtype=torch.bool, device=env.device
+        )  # we have infinite terrain because it is a plane
+    elif env.scene.cfg.terrain.terrain_type == "generator":
+        # obtain the size of the sub-terrains
+        terrain_gen_cfg = env.scene.terrain.cfg.terrain_generator
+        grid_width, grid_length = terrain_gen_cfg.size
+
+        # extract the used quantities (to enable type-hinting)
+        asset: RigidObject = env.scene[asset_cfg.name]
+
+        # relative root position to the environment origin
+        rel_root_pos = asset.data.root_pos_w[:, :2] - env.scene.env_origins[:, :2]
+
+        # check if the agent is out of bounds
+        x_out_of_bounds = (
+            torch.abs(rel_root_pos[:, 0]) > grid_width/2 - distance_buffer
+        )
+        y_out_of_bounds = (
+            torch.abs(rel_root_pos[:, 1]) > grid_length/2 - distance_buffer
+        )
+        return torch.logical_or(x_out_of_bounds, y_out_of_bounds)
+    else:
+        raise ValueError(
+            "Received unsupported terrain type, must be either 'plane' or 'generator'."
+        )
