@@ -30,7 +30,7 @@ parser.add_argument(
 parser.add_argument(
     "--max_length",
     type=int,
-    default=2000,
+    default=3000,
     help="Maximum length of each test episode (in steps).",
 )
 parser.add_argument(
