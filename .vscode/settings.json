@@ -1,5 +1,17 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "python.analysis.extraPaths": [
+        "~/projects/IsaacLab/source/isaaclab",
+        "~/projects/IsaacLab/source/isaaclab_assets",
+        "~/projects/IsaacLab/source/isaaclab_mimic",
+        "~/projects/IsaacLab/source/isaaclab_rl",
+        "~/projects/IsaacLab/source/isaaclab_tasks",
+        "./source/humanoid_assets",
+        "./source/humanoid_mdp",
+        "./source/humanoid_rl",
+        "./source/humanoid_tasks",
+        "./source/humanoid_utils",
+    ]
 }
