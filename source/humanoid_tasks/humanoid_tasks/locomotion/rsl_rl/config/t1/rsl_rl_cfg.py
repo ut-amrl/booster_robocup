@@ -388,7 +388,6 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    # confident this does nothing but gonna leave it here just in case
     base_external_force_torque = EventTerm(
         func=mdp.apply_external_force_torque,
         mode="reset",
