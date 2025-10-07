@@ -147,28 +147,21 @@ class CommandsCfg:
     # )
 
     base_velocity = humanoid_mdp.CurriculumVelocityCommandCfg(
-            asset_name="robot",                                # <-- REQUIRED by parent cfg
-            ranges=mdp.UniformVelocityCommandCfg.Ranges(           # <-- REQUIRED by parent cfg
-                lin_vel_x=(-2.0, 2.0),
-                lin_vel_y=(-1.0, 1.0),
-                ang_vel_z=(-2.0, 2.0),
-            ),
-            debug_vis=True,                    # <-- enable arrows
-            resampling_time_range=(8.0, 12.0),
-            curriculum=True,
-            still_proportion=0.10,
-            lin_vel_levels=10,
-            ang_vel_levels=10,
-            lin_vel_x_resolution=0.2,
-            lin_vel_y_resolution=0.1,
-            ang_vel_resolution=0.2,
-            update_rate=0.1,
-            lin_vel_x_toler=0.4,
-            lin_vel_y_toler=0.2,
-            ang_vel_yaw_toler=0.2,
-            episode_length_toler=0.1,
+        asset_name="robot",  # <-- REQUIRED by parent cfg
+        debug_vis=True,  # <-- enable arrows
+        resampling_time_range=(8.0, 12.0),
+        rel_standing_envs=0.10,
+        lin_vel_levels=10,
+        ang_vel_levels=10,
+        lin_vel_x_resolution=0.2,
+        lin_vel_y_resolution=0.1,
+        ang_vel_resolution=0.2,
+        update_rate=0.1,
+        lin_vel_x_toler=0.4,
+        lin_vel_y_toler=0.2,
+        ang_vel_yaw_toler=0.2,
+        episode_length_toler=0.1,
     )
-
 
 
 @configclass
@@ -477,12 +470,6 @@ class EventCfg:
         },
     )
 
-    curriculum_success_promotion = EventTerm(
-        func=humanoid_mdp.curriculum_success_promotion,
-        mode="reset",
-        params={"command_name": "base_velocity"},
-    )
-
     # interval
     push_robot = EventTerm(
         func=humanoid_mdp.push_by_adding_velocity,
@@ -715,7 +702,8 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
+    # terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
+    promote_curriculum = CurrTerm(func=humanoid_mdp.curriculum_success_promotion)
 
 
 ##
@@ -744,7 +732,7 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
-    # curriculum: CurriculumCfg = CurriculumCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self) -> None:
         """Post initialization."""
