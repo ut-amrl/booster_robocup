@@ -74,7 +74,12 @@ parser.add_argument(
 )
 parser.add_argument("--wandb_run", type=str, default="", help="Run from WandB.")
 parser.add_argument("--wandb_model", type=str, default="", help="Model from WandB.")
-parser.add_argument("--wandb_log", action="store_true", default=False, help="Log results to WandB (if --wandb is used)")
+parser.add_argument(
+    "--wandb_log",
+    action="store_true",
+    default=False,
+    help="Log results to WandB (if --wandb is used)",
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -127,7 +132,7 @@ from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
 from humanoid_utils.wandb_utils import load_wandb_policy
-from humanoid_utils.metrics import *
+from humanoid_utils.metrics import SurvivalTime, MovementError, Energy, Smoothness
 
 # PLACEHOLDER: Extension template (do not remove this comment)
 
@@ -144,7 +149,9 @@ def main(
 
     # override configurations with non-hydra CLI arguments
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
-    env_cfg.set_num_envs(args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs)
+    env_cfg.set_num_envs(
+        args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+    )
 
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
@@ -195,7 +202,11 @@ def main(
         video_kwargs = {
             "video_folder": os.path.join(log_dir, "videos", "test"),
             "step_trigger": lambda step: False,
-            "video_length": args_cli.video_length if args_cli.video_length is not None else args_cli.max_length,
+            "video_length": (
+                args_cli.video_length
+                if args_cli.video_length is not None
+                else args_cli.max_length
+            ),
             "disable_logger": True,
         }
         print("[INFO] Recording videos during testing.")
@@ -268,15 +279,16 @@ def main(
     # keep track of metrics
     alive = torch.ones(env.num_envs, dtype=torch.long)
     metrics = {
-        "survival_time": SurvivalTime(env.unwrapped), 
+        "survival_time": SurvivalTime(env.unwrapped),
         "movement_error": MovementError(env.unwrapped),
         "energy": Energy(env.unwrapped),
         "smoothness": Smoothness(env.unwrapped),
     }
 
     # simulate environment
-    for timestep in range(1, args_cli.max_length+1):
-        if not simulation_app.is_running(): break
+    for timestep in range(1, args_cli.max_length + 1):
+        if not simulation_app.is_running():
+            break
         start_time = time.time()
 
         # can't use inference mode because env.reset modifies tensors
@@ -300,8 +312,11 @@ def main(
 
     if args_cli.video:
         env.env.stop_recording()
-        
-    computed_metrics = {name: metric.compute(env.unwrapped.cfg.subtask_names) for name, metric in metrics.items()}
+
+    computed_metrics = {
+        name: metric.compute(env.unwrapped.cfg.subtask_names)
+        for name, metric in metrics.items()
+    }
 
     # print metrics
     print("Test results:")
@@ -328,18 +343,26 @@ def main(
             old_run_name = wandb.Api().run(f"{entity}/{project}/{run_id}").name
             run = wandb.init(
                 name=f"{old_run_name}_Benchmark",
-                entity=os.environ["WANDB_USERNAME"], 
-                project=agent_cfg["wandb_project"]
+                entity=os.environ["WANDB_USERNAME"],
+                project=agent_cfg["wandb_project"],
             )
-            print(f"You do not have permission to update runs! Created a new run at {run.url}")
+            print(
+                f"You do not have permission to update runs! Created a new run at {run.url}"
+            )
 
-        flat = {f"{m}/{s}": v for m, subs in computed_metrics.items() for s, v in subs.items()}
+        flat = {
+            f"{m}/{s}": v
+            for m, subs in computed_metrics.items()
+            for s, v in subs.items()
+        }
         wandb.log(flat)
 
         artifact = wandb.Artifact("benchmark-results", type="evaluation")
         artifact.add_file(log_file)
         if args_cli.video:
-            artifact.add_file(os.path.join(log_dir, "videos", "test", f"{video_name}.mp4"))
+            artifact.add_file(
+                os.path.join(log_dir, "videos", "test", f"{video_name}.mp4")
+            )
         run.log_artifact(artifact)
 
         run.finish()

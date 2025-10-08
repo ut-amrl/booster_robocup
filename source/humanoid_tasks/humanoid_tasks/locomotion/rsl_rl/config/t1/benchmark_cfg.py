@@ -13,9 +13,14 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
 import isaaclab.envs.mdp as mdp
-import humanoid_mdp
 from .rsl_rl_cfg import T1BaselineCfg
-from .benchmark_cfg_utils import split_command_cfg, filtered_func, reset_root_state_uniform_once, subterrain_out_of_bounds
+from .benchmark_cfg_utils import (
+    split_command_cfg,
+    filtered_func,
+    reset_root_state_uniform_once,
+    subterrain_out_of_bounds,
+)
+
 
 @configclass
 class Subtask:
@@ -34,9 +39,11 @@ class Subtask:
     )
     events: Dict[str, EventTermCfg] = {}
 
+
 @configclass
 class WalkSubtask(Subtask):
     name = "walk"
+
 
 @configclass
 class RunSubtask(Subtask):
@@ -53,10 +60,14 @@ class RunSubtask(Subtask):
         heading_command=True,
     )
 
+
 @configclass
 class UnevenSubtask(Subtask):
     name = "uneven"
-    subterrain = terrain_gen.HfRandomUniformTerrainCfg(noise_range=(0.00, 0.03), noise_step=0.005)
+    subterrain = terrain_gen.HfRandomUniformTerrainCfg(
+        noise_range=(0.00, 0.03), noise_step=0.005
+    )
+
 
 @configclass
 class PushSubtask(Subtask):
@@ -76,6 +87,7 @@ class PushSubtask(Subtask):
         )
     }
 
+
 class T1Baseline_BENCHMARK(T1BaselineCfg):
     def __post_init__(self) -> None:
         # post init of parent
@@ -90,7 +102,6 @@ class T1Baseline_BENCHMARK(T1BaselineCfg):
         self.setup_subtasks()
         self.set_num_envs(32)
 
-
     def set_num_envs(self, num_envs: int):
         self.scene.num_envs = num_envs * self.num_subtasks
 
@@ -102,8 +113,10 @@ class T1Baseline_BENCHMARK(T1BaselineCfg):
             size=(100.0, 10.0),
             num_cols=self.num_subtasks,
             border_width=3,
-            sub_terrains=OrderedDict([(subtask.name, subtask.subterrain) for subtask in self.subtasks]),
-            curriculum=True, # needed to ensure subterrains are created equally
+            sub_terrains=OrderedDict(
+                [(subtask.name, subtask.subterrain) for subtask in self.subtasks]
+            ),
+            curriculum=True,  # needed to ensure subterrains are created equally
         )
 
         # make split base velocity command
@@ -129,7 +142,7 @@ class T1Baseline_BENCHMARK(T1BaselineCfg):
                 )
 
                 setattr(self.events, f"{subtask.name}_{event_name}", filtered_event_cfg)
-    
+
     def setup_benchmark_mode(self):
         # viewer
         self.viewer = ViewerCfg(

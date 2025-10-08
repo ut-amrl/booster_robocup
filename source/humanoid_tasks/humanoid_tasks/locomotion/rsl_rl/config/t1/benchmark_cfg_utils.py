@@ -4,14 +4,21 @@ from typing import Callable, Dict, Sequence
 import torch
 from isaaclab.assets import RigidObject
 from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnv
-from isaaclab.managers import CommandTermCfg, EventTermCfg, ManagerTermBase, SceneEntityCfg
+from isaaclab.managers import (
+    CommandTermCfg,
+    EventTermCfg,
+    ManagerTermBase,
+    SceneEntityCfg,
+)
 
 import isaaclab.envs.mdp as mdp
 
 
-def split_command_cfg(cfg: CommandTermCfg, subterm_cfgs: Sequence[CommandTermCfg]) -> CommandTermCfg:
+def split_command_cfg(
+    cfg: CommandTermCfg, subterm_cfgs: Sequence[CommandTermCfg]
+) -> CommandTermCfg:
     """Utility function to create a split command config term.
-    
+
     This function creates a SplitCommand subclass that splits the command generation
     across multiple subterms, each responsible for a subset of the environments. All
     subterms must be of the same type.
@@ -20,8 +27,10 @@ def split_command_cfg(cfg: CommandTermCfg, subterm_cfgs: Sequence[CommandTermCfg
     work as intended. However, this requires us to register the subclass to avoid issues
     with hydra serialization.
     """
+
     class SplitCommand(cfg.class_type):
         __name__ = f"SplitCommand_{cfg.class_type.__name__}"
+
         def __init__(self, cfg: CommandTermCfg, env: ManagerBasedRLEnv) -> None:
             super().__init__(cfg, env)
             self.subterms = [cfg.class_type(subterms, env) for subterms in subterm_cfgs]
@@ -33,16 +42,18 @@ def split_command_cfg(cfg: CommandTermCfg, subterm_cfgs: Sequence[CommandTermCfg
         @property
         def command(self) -> torch.Tensor:
             for i in range(self.num_subtasks):
-                self.cmd[i*self.n:(i+1)*self.n] = self.subterms[i].command[i*self.n:(i+1)*self.n]
+                self.cmd[i * self.n : (i + 1) * self.n] = self.subterms[i].command[
+                    i * self.n : (i + 1) * self.n
+                ]
             return self.cmd
 
         def reset(self, env_ids: Sequence[int] | None = None) -> dict[str, float]:
             metrics = super().reset(env_ids)
             for subterm in self.subterms:
                 subterm.reset(env_ids)
-            
+
             return metrics
-        
+
         def compute(self, dt: float):
             super().compute(dt)
             for subterm in self.subterms:
@@ -51,31 +62,35 @@ def split_command_cfg(cfg: CommandTermCfg, subterm_cfgs: Sequence[CommandTermCfg
     # register the subclass to the module for hydra
     this_mod = sys.modules[__name__]
     setattr(this_mod, SplitCommand.__name__, SplitCommand)
-    
+
     cfg.class_type = SplitCommand
     return cfg
 
+
 def filtered_func(
-    env: ManagerBasedEnv, 
-    env_ids: torch.Tensor, 
-    subtask_idx: str, 
-    func: Callable, 
-    params: Dict
+    env: ManagerBasedEnv,
+    env_ids: torch.Tensor,
+    subtask_idx: str,
+    func: Callable,
+    params: Dict,
 ):
     """Wrapper to filter env ids by subtask index before calling a function.
-    
+
     This function filters the env ids using the subtask index, so it assumes
     that the envs are evenly split and their order is consistent.
     """
     n = env.num_envs // env.cfg.num_subtasks
-    sub_env_ids = env_ids[(subtask_idx*n <= env_ids) & (env_ids < (subtask_idx+1)*n)]
+    sub_env_ids = env_ids[
+        (subtask_idx * n <= env_ids) & (env_ids < (subtask_idx + 1) * n)
+    ]
     if len(sub_env_ids) > 0:
         func(env, sub_env_ids, **params)
+
 
 class reset_root_state_uniform_once(ManagerTermBase):
     def __init__(self, cfg: EventTermCfg, env: ManagerBasedEnv):
         super().__init__(cfg, env)
-        
+
         self.alive = torch.ones(env.num_envs, dtype=torch.bool, device=env.device)
 
     def __call__(
@@ -104,6 +119,7 @@ class reset_root_state_uniform_once(ManagerTermBase):
 
         self.alive[env_ids] = False
 
+
 def subterrain_out_of_bounds(
     env: ManagerBasedRLEnv,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
@@ -131,10 +147,10 @@ def subterrain_out_of_bounds(
 
         # check if the agent is out of bounds
         x_out_of_bounds = (
-            torch.abs(rel_root_pos[:, 0]) > grid_width/2 - distance_buffer
+            torch.abs(rel_root_pos[:, 0]) > grid_width / 2 - distance_buffer
         )
         y_out_of_bounds = (
-            torch.abs(rel_root_pos[:, 1]) > grid_length/2 - distance_buffer
+            torch.abs(rel_root_pos[:, 1]) > grid_length / 2 - distance_buffer
         )
         return torch.logical_or(x_out_of_bounds, y_out_of_bounds)
     else:
