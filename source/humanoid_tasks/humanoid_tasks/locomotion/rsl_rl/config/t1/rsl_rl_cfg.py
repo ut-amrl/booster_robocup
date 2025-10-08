@@ -533,7 +533,7 @@ class RewardsCfg:
             )
         },
     )
-    # END OF NEW
+
     foot_clearance = RewTerm(
         func=humanoid_mdp.foot_clearance_reward,
         weight=0.5,
