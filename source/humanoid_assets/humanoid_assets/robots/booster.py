@@ -44,7 +44,7 @@ T1_CFG = ArticulationCfg(
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.72), # maybe needs nonzero height
+        pos=(0.0, 0.0, 0.7), # maybe needs nonzero height
         joint_pos={
                 #    "joint_h.*": 0.0,
                 #    "joint_a[lr]1": 0.25,
@@ -55,10 +55,10 @@ T1_CFG = ArticulationCfg(
                 #    "joint_ar3": 0.0,
                 #    "joint_ar4": 0.5,
                 #    "joint_waist": 0.0,
-                   "joint_l[lr]1": -0.4,
+                   "joint_l[lr]1": -0.2,
                    "joint_l[lr]2": 0.0,
                    "joint_l[lr]3": 0.0,
-                   "joint_l[lr]4": 0.6,
+                   "joint_l[lr]4": 0.4, # should be .4
                    "joint_l[lr]5": -0.25,
                    "joint_l[lr]6": 0.0,
                    },

@@ -203,9 +203,9 @@ class GaitCycleCommand(CommandTerm):
 
     def _update_command(self) -> None:
         """Post-processes the frequency command."""
-        self.phase[:, :] = self.freq * current_time_s(self._env)
-        self.gait_cycle[:, 0] = torch.cos(2 * 3.1415926 * self.phase)[:,0]
-        self.gait_cycle[:, 1] = torch.sin(2 * 3.1415926 * self.phase)[:,0]
+        self.phase[:, :] = torch.fmod(self.freq * current_time_s(self._env), 1)
+        self.gait_cycle[:, 0] = torch.cos(2 * torch.pi * self.phase)[:,0]
+        self.gait_cycle[:, 1] = torch.sin(2 * torch.pi * self.phase)[:,0]
 
         # self.debug_log["frequency"].append(self.freq[:,0, 0].item())
         # self.debug_log["phase"].append(self.phase[:, 0, 0].cpu().item())

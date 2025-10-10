@@ -120,7 +120,7 @@ class CommandsCfg:
 
     base_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
-        resampling_time_range=(10.0, 10.0),
+        resampling_time_range=(10.0, 12.0),
         rel_standing_envs=0.1,
         rel_heading_envs=0.0,
         heading_command=False,
@@ -129,9 +129,12 @@ class CommandsCfg:
             # lin_vel_x=(-.25, 0.5),
             # lin_vel_y=(0.0, 0.0),
             # ang_vel_z=(-0.5, 0.5),
-            lin_vel_x=(-.50, 1.0),
+            # lin_vel_x=(-.50, 1.0),
+            # lin_vel_y=(0.0, 0.0),
+            # ang_vel_z=(-1.0, 1.0),
+            lin_vel_x=(0, 0),
             lin_vel_y=(0.0, 0.0),
-            ang_vel_z=(-1.0, 1.0),
+            ang_vel_z=(0, 0),
             # lin_vel_x=(-1.0, 2.0),
             # lin_vel_y=(0.0, 0.0),
             # ang_vel_z=(-1.0, 1.0),
@@ -373,16 +376,16 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    # base_external_force_torque = EventTerm( # how to get these as privileged obs?
-    #     func=mdp.apply_external_force_torque,
-    #     mode="interval",
-    #     interval_range_s=(5.0, 5.1),
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
-    #         "force_range": (-10.0, 10.0),
-    #         "torque_range": (-2.0, 2.0),
-    #     },
-    # )
+    base_external_force_torque = EventTerm( # how to get these as privileged obs?
+        func=mdp.apply_external_force_torque,
+        mode="interval",
+        interval_range_s=(5.0, 5.1),
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
+            "force_range": (-2.0, 2.0), # 10
+            "torque_range": (-1.0, 1.0), # 2
+        },
+    )
     # base_external_velocity = EventTerm(
     #     func=mdp.push_by_setting_velocity,
     #     mode="interval",
@@ -509,7 +512,7 @@ class RewardsCfg:
         weight = 1.0,
         params = {"asset_cfg": SceneEntityCfg("robot")}
     )
-    tracking_lin_vel_y = RewTerm(
+    tracking_ang_vel_yaw = RewTerm(
         func = humanoid_mdp.reward_tracking_ang_vel_yaw,
         weight = 0.5,
         params = {"asset_cfg": SceneEntityCfg("robot")}
@@ -603,6 +606,12 @@ class RewardsCfg:
         params = {"asset_cfg": SceneEntityCfg("robot",
                                 body_names = ["ll6", "lr6"])}
     )
+    # feet_yaw = RewTerm(
+    #     func = humanoid_mdp.reward_feet_yaw,
+    #     weight =  -1.,
+    #     params = {"asset_cfg": SceneEntityCfg("robot",
+    #                             body_names = ["ll6", "lr6"])}
+    # )
     feet_roll = RewTerm(
         func = humanoid_mdp.reward_feet_roll,
         weight =  -0.1,
@@ -617,7 +626,7 @@ class RewardsCfg:
     )
     feet_swing = RewTerm(
         func = humanoid_mdp.reward_feet_swing,
-        weight =  3., # here
+        weight =  0., # here
         params = {"asset_cfg": SceneEntityCfg("robot",
                                 body_names = ["ll6", "lr6"])}
     )
@@ -674,12 +683,53 @@ class TerminationsCfg:
         time_out=True,
     )
 
+def override_command_range(env, env_ids, old_value, value, num_steps):
+    # Override after num_steps
+    if env.common_step_counter > num_steps:
+        return value
+    return mdp.modify_term_cfg.NO_CHANGE
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
+    # terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_vel)
+    feet_swing_reward_schedule1 = CurrTerm(
+        func=mdp.modify_reward_weight,
+        params={
+            "term_name": "feet_swing",
+            "weight": 1.0,
+            "num_steps": 200,
+        }
+    )
+    feet_swing_reward_schedule2 = CurrTerm(
+        func=mdp.modify_reward_weight,
+        params={
+            "term_name": "feet_swing",
+            "weight": 2.0,
+            "num_steps": 400,
+        }
+    )
+    feet_swing_reward_schedule3 = CurrTerm(
+        func=mdp.modify_reward_weight,
+        params={
+            "term_name": "feet_swing",
+            "weight": 3.0,
+            "num_steps": 600,
+        }
+    )
+    # range_override = CurrTerm(
+    #     func=mdp.modify_term_cfg,
+    #     params={
+    #         "address": "commands.object_pose.ranges.pos_x",
+    #         "modify_fn": override_command_range,
+    #         "modify_params": {
+    #             "value": (-0.75, -0.25),
+    #             "num_steps": 12_000,
+    #         }
+    #     }
+    # )
+
 
 
 ##
@@ -723,15 +773,15 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
-    # curriculum: CurriculumCfg = CurriculumCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self) -> None:
         """Post initialization."""
         # general settings
-        self.decimation = 4  # 50 Hz
+        self.decimation = 10  # 50 Hz
         self.episode_length_s = 30.0
         # simulation settings
-        self.sim.dt = 0.005  # 200 Hz
+        self.sim.dt = 0.002  # 200 Hz
         self.sim.render_interval = self.decimation
         self.sim.physics_material = self.scene.terrain.physics_material
 
@@ -770,6 +820,7 @@ class T1Baseline_PLAY(T1BaselineCfg):
         self.commands.base_velocity.ranges.lin_vel_x = (0.5, 0.5)
         self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
         self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
+        self.commands.gait_cycle.ranges = (1.5, 1.5)
 
         # disable randomization for play
         self.observations.policy.enable_corruption = False

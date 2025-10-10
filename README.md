@@ -53,6 +53,13 @@ The following command will take you through the steps of pulling a policy from `
     --headless \
     --video 
 ```
+```
+./isaaclab.sh -p scripts/rsl_rl/sim_only.py \
+    --task T1-Baseline-Play-v1 \
+    --num_envs 1 \
+    --headless \
+    --video 
+```
 
 ### Using Booster-provided Simulation [Todo]
 [https://booster.feishu.cn/wiki/XY6Kwrq1bizif4kq7X9c14twnle]
