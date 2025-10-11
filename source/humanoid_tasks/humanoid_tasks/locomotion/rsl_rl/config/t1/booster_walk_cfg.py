@@ -186,9 +186,6 @@ class ActionsCfg:
         preserve_order=True,
         scale=1.0,
         use_default_offset=True,
-        clip={
-            "joint_l[lr][1-6]": (-1.0, 1.0)
-        },  # change the clipping to before adding default pose
     )
 
 
