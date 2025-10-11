@@ -92,6 +92,7 @@ class reset_root_state_uniform_once(ManagerTermBase):
 
     Internally calls reset_root_state_uniform.
     """
+
     def __init__(self, cfg: EventTermCfg, env: ManagerBasedEnv):
         super().__init__(cfg, env)
 
