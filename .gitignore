@@ -51,3 +51,11 @@ _build
 **/runs/*
 **/logs/*
 **/recordings/*
+
+# Debugging Logs
+**/debug_logs/*
+**/debug_scripts/*
+**/*.json
+**/*.png
+!package.json
+!package-lock.json
