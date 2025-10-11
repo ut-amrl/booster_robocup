@@ -6,6 +6,7 @@ from isaaclab_rl.rsl_rl import (
 )
 import math
 
+
 @configclass
 class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
@@ -17,7 +18,7 @@ class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
     logger = "wandb"
     wandb_project = "T1_Baseline"
     policy = RslRlPpoActorCriticCfg(
-        init_noise_std=math.exp(-2), # logstd = -2
+        init_noise_std=math.exp(-2),  # logstd = -2
         actor_hidden_dims=[512, 256, 128],
         critic_hidden_dims=[512, 256, 128],
         activation="elu",

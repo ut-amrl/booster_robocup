@@ -350,7 +350,10 @@ class PPO:
                 value_loss = (returns_batch - value_batch).pow(2).mean()
 
             # bound loss
-            bound_loss = torch.clip(mu_batch - 1.0, min=0.0).square().mean() + torch.clip(mu_batch + 1.0, max=0.0).square().mean()
+            bound_loss = (
+                torch.clip(mu_batch - 1.0, min=0.0).square().mean()
+                + torch.clip(mu_batch + 1.0, max=0.0).square().mean()
+            )
 
             loss = (
                 surrogate_loss

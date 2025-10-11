@@ -4,8 +4,12 @@ import math
 
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
-from isaaclab.envs import ManagerBasedRLEnvCfg, ManagerBasedRLEnv, ViewerCfg, VecEnvStepReturn
-from isaaclab.managers import CurriculumTermCfg as CurrTerm
+from isaaclab.envs import (
+    ManagerBasedRLEnvCfg,
+    ManagerBasedRLEnv,
+    ViewerCfg,
+    VecEnvStepReturn,
+)
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -13,19 +17,17 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import ContactSensorCfg, RayCasterCfg
-from isaaclab.sensors.ray_caster import patterns
+from isaaclab.sensors import ContactSensorCfg
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import (
     ISAAC_NUCLEUS_DIR,
     NVIDIA_NUCLEUS_DIR,
 )
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise, GaussianNoiseCfg
+from isaaclab.utils.noise import GaussianNoiseCfg
 
 
 import isaaclab.envs.mdp as mdp
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as locomotion_mdp
 import humanoid_mdp
 from humanoid_assets import T1_CFG2
 import torch
@@ -36,26 +38,28 @@ import torch
 ##
 
 JOINT_CFG = SceneEntityCfg(
-                    "robot",
-                    joint_names=[
-                        "joint_ll1",
-                        "joint_ll2",
-                        "joint_ll3",
-                        "joint_ll4",
-                        "joint_ll5",
-                        "joint_ll6",
-                        "joint_lr1",
-                        "joint_lr2",
-                        "joint_lr3",
-                        "joint_lr4",
-                        "joint_lr5",
-                        "joint_lr6",
-                    ],
-                    preserve_order=True,
-                )
-FEET_CFG = SceneEntityCfg("robot", body_names = ["ll6", "lr6"])
+    "robot",
+    joint_names=[
+        "joint_ll1",
+        "joint_ll2",
+        "joint_ll3",
+        "joint_ll4",
+        "joint_ll5",
+        "joint_ll6",
+        "joint_lr1",
+        "joint_lr2",
+        "joint_lr3",
+        "joint_lr4",
+        "joint_lr5",
+        "joint_lr6",
+    ],
+    preserve_order=True,
+)
+FEET_CFG = SceneEntityCfg("robot", body_names=["ll6", "lr6"])
 TRUNK_CFG = SceneEntityCfg(name="robot", body_names="trunk", preserve_order=True)
-OTHER_LINKS_CFG = SceneEntityCfg(name="robot", body_names="^(?!.*trunk).*", preserve_order=True)
+OTHER_LINKS_CFG = SceneEntityCfg(
+    name="robot", body_names="^(?!.*trunk).*", preserve_order=True
+)
 
 
 @configclass
@@ -128,6 +132,7 @@ class SceneCfg(InteractiveSceneCfg):
 # MDP settings
 ##
 
+
 @configclass
 class CommandsCfg:
     """Command specifications for the MDP."""
@@ -150,6 +155,7 @@ class CommandsCfg:
         range=(1.0, 2.0),
         debug_vis=False,
     )
+
 
 @configclass
 class ActionsCfg:
@@ -180,8 +186,11 @@ class ActionsCfg:
         preserve_order=True,
         scale=1.0,
         use_default_offset=True,
-        clip = {"joint_l[lr][1-6]": (-1.0,1.0)}, # change the clipping to before adding default pose
+        clip={
+            "joint_l[lr][1-6]": (-1.0, 1.0)
+        },  # change the clipping to before adding default pose
     )
+
 
 @configclass
 class ObservationsCfg:
@@ -205,18 +214,14 @@ class ObservationsCfg:
         )
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
-            params={
-                "asset_cfg": JOINT_CFG
-            },
+            params={"asset_cfg": JOINT_CFG},
             noise=GaussianNoiseCfg(mean=0, std=0.01),
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={
-                "asset_cfg": JOINT_CFG
-            },
+            params={"asset_cfg": JOINT_CFG},
             noise=GaussianNoiseCfg(mean=0, std=0.1),
-            scale = 0.1
+            scale=0.1,
         )
         actions = ObsTerm(func=mdp.last_action)
 
@@ -228,6 +233,7 @@ class ObservationsCfg:
     @configclass
     class CriticCfg(ObsGroup):
         """Observations for policy group."""
+
         projected_gravity = ObsTerm(
             func=mdp.projected_gravity, noise=GaussianNoiseCfg(mean=0, std=0.05)
         )
@@ -242,18 +248,14 @@ class ObservationsCfg:
         )
         joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
-            params={
-                "asset_cfg": JOINT_CFG
-            },
+            params={"asset_cfg": JOINT_CFG},
             noise=GaussianNoiseCfg(mean=0, std=0.01),
         )
         joint_vel = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={
-                "asset_cfg": JOINT_CFG
-            },
+            params={"asset_cfg": JOINT_CFG},
             noise=GaussianNoiseCfg(mean=0, std=0.1),
-            scale = 0.1
+            scale=0.1,
         )
         actions = ObsTerm(func=mdp.last_action)
 
@@ -263,14 +265,16 @@ class ObservationsCfg:
             func=humanoid_mdp.body_mass,
             params={
                 "asset_cfg": TRUNK_CFG,
-            }
+            },
         )
         base_com = ObsTerm(func=humanoid_mdp.base_com, scale=1.0)
         base_lin_vel = ObsTerm(
             func=mdp.base_lin_vel, noise=GaussianNoiseCfg(mean=0, std=0.05)
         )
-        base_height = ObsTerm(func = mdp.base_pos_z)
-        base_push_force = ObsTerm(func=mdp.body_incoming_wrench, params={"asset_cfg": TRUNK_CFG}, scale=0.1)
+        base_height = ObsTerm(func=mdp.base_pos_z)
+        base_push_force = ObsTerm(
+            func=mdp.body_incoming_wrench, params={"asset_cfg": TRUNK_CFG}, scale=0.1
+        )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -284,8 +288,9 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
+
     # interval
-    base_external_force_torque = EventTerm( # how to get these as privileged obs?
+    base_external_force_torque = EventTerm(  # how to get these as privileged obs?
         func=mdp.apply_external_force_torque,
         mode="interval",
         interval_range_s=(5.0, 6.0),
@@ -301,8 +306,14 @@ class EventCfg:
         interval_range_s=(2.0, 2.1),
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names="trunk"),
-            "velocity_range": {"x":(-.1, .1), "y":(-.1, .1), "z":(-.1, .1),
-                               "roll":(-.02, .02), "pitch":(-.02, .02), "yaw":(-.02, .02)},
+            "velocity_range": {
+                "x": (-0.1, 0.1),
+                "y": (-0.1, 0.1),
+                "z": (-0.1, 0.1),
+                "roll": (-0.02, 0.02),
+                "pitch": (-0.02, 0.02),
+                "yaw": (-0.02, 0.02),
+            },
         },
     )
 
@@ -342,7 +353,11 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": OTHER_LINKS_CFG,
-            "com_range": {"x": (-0.005, 0.005), "y": (-0.005, 0.005), "z": (-0.005, 0.005)},
+            "com_range": {
+                "x": (-0.005, 0.005),
+                "y": (-0.005, 0.005),
+                "z": (-0.005, 0.005),
+            },
         },
     )
     other_mass = EventTerm(
@@ -385,7 +400,11 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("robot"),
-            "pose_range": {"x": (-1.0, 1.0), "y": (-1.0, 1.0), "yaw": (-math.pi, math.pi)},
+            "pose_range": {
+                "x": (-1.0, 1.0),
+                "y": (-1.0, 1.0),
+                "yaw": (-math.pi, math.pi),
+            },
             "velocity_range": {"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
         },
     )
@@ -400,6 +419,7 @@ class EventCfg:
         },
     )
 
+
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
@@ -408,125 +428,144 @@ class RewardsCfg:
     survival = RewTerm(
         func=humanoid_mdp.reward_survival,
         weight=0.25,
-        params={
-        },
+        params={},
     )
     tracking_lin_vel_x = RewTerm(
-        func = humanoid_mdp.reward_tracking_lin_vel_x,
-        weight = 1.0,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_tracking_lin_vel_x,
+        weight=1.0,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     tracking_lin_vel_y = RewTerm(
-        func = humanoid_mdp.reward_tracking_lin_vel_y,
-        weight = 1.0,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_tracking_lin_vel_y,
+        weight=1.0,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     tracking_ang_vel_yaw = RewTerm(
-        func = humanoid_mdp.reward_tracking_ang_vel_yaw,
-        weight = 0.5,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_tracking_ang_vel_yaw,
+        weight=0.5,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     base_height = RewTerm(
-        func = humanoid_mdp.reward_base_height,
-        weight = -20,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_base_height,
+        weight=-20,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     orientation = RewTerm(
-        func = humanoid_mdp.reward_orientation,
-        weight = -5,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_orientation,
+        weight=-5,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     torques = RewTerm(
-        func = humanoid_mdp.reward_torques,
-        weight =  -2.e-4,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_torques,
+        weight=-2.0e-4,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     torque_tiredness = RewTerm(
-        func = humanoid_mdp.reward_torque_tiredness,
-        weight = -1.e-2,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_torque_tiredness,
+        weight=-1.0e-2,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     power = RewTerm(
-        func = humanoid_mdp.reward_power,
-        weight = -2.e-3,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_power,
+        weight=-2.0e-3,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     lin_vel_z = RewTerm(
-        func = humanoid_mdp.reward_lin_vel_z,
-        weight =  -2.,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_lin_vel_z,
+        weight=-2.0,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     ang_vel_xy = RewTerm(
-        func = humanoid_mdp.reward_ang_vel_xy,
-        weight =  -0.2,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_ang_vel_xy,
+        weight=-0.2,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     dof_vel = RewTerm(
-        func = humanoid_mdp.reward_dof_vel,
-        weight =  -1.e-4,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_dof_vel,
+        weight=-1.0e-4,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     dof_acc = RewTerm(
-        func = humanoid_mdp.reward_dof_acc,
-        weight =  -1.e-7,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_dof_acc,
+        weight=-1.0e-7,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     root_acc = RewTerm(
-        func = humanoid_mdp.reward_root_acc,
-        weight =  -1.e-4,
-        params = {"asset_cfg": SceneEntityCfg("robot"),
-        }
+        func=humanoid_mdp.reward_root_acc,
+        weight=-1.0e-4,
+        params={
+            "asset_cfg": SceneEntityCfg("robot"),
+        },
     )
     action_rate = RewTerm(
-        func = humanoid_mdp.reward_action_rate,
-        weight =  -1.,
+        func=humanoid_mdp.reward_action_rate,
+        weight=-1.0,
     )
     dof_pos_limits = RewTerm(
-        func = humanoid_mdp.reward_dof_pos_limits,
-        weight =  -1.,
-        params = {"asset_cfg": SceneEntityCfg("robot")}
+        func=humanoid_mdp.reward_dof_pos_limits,
+        weight=-1.0,
+        params={"asset_cfg": SceneEntityCfg("robot")},
     )
     collision = RewTerm(
-        func = humanoid_mdp.reward_collision,
-        weight =  -1.,
-        params = {"sensor_cfg": SceneEntityCfg("contact_forces", #"Trunk", "H1", "H2", "AL", "AR", "Waist", "Hip", "Shank", "Ankle"
-                                    body_names = ["trunk", "h1", "h2",
-                                                  "al1", "al2", "al3", "al4",
-                                                  "ar1", "ar2", "ar3", "ar4",
-                                                  "waist",
-                                                  "ll1", "ll2", "ll3", "ll4", "ll5",
-                                                  "lr1", "lr2", "lr3", "lr4", "lr5",])}
+        func=humanoid_mdp.reward_collision,
+        weight=-1.0,
+        params={
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces",  # "Trunk", "H1", "H2", "AL", "AR", "Waist", "Hip", "Shank", "Ankle"
+                body_names=[
+                    "trunk",
+                    "h1",
+                    "h2",
+                    "al1",
+                    "al2",
+                    "al3",
+                    "al4",
+                    "ar1",
+                    "ar2",
+                    "ar3",
+                    "ar4",
+                    "waist",
+                    "ll1",
+                    "ll2",
+                    "ll3",
+                    "ll4",
+                    "ll5",
+                    "lr1",
+                    "lr2",
+                    "lr3",
+                    "lr4",
+                    "lr5",
+                ],
+            )
+        },
     )
     feet_slip = RewTerm(
-        func = humanoid_mdp.reward_feet_slip,
-        weight =  -0.1,
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_slip, weight=-0.1, params={"asset_cfg": FEET_CFG}
     )
     feet_yaw_diff = RewTerm(
-        func = humanoid_mdp.reward_feet_yaw_diff,
-        weight =  -1.,
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_yaw_diff,
+        weight=-1.0,
+        params={"asset_cfg": FEET_CFG},
     )
     feet_yaw_mean = RewTerm(
-        func = humanoid_mdp.reward_feet_yaw_mean,
-        weight =  -1.,
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_yaw_mean,
+        weight=-1.0,
+        params={"asset_cfg": FEET_CFG},
     )
     feet_roll = RewTerm(
-        func = humanoid_mdp.reward_feet_roll,
-        weight =  -0.1,
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_roll, weight=-0.1, params={"asset_cfg": FEET_CFG}
     )
     feet_distance = RewTerm(
-        func = humanoid_mdp.reward_feet_distance,
-        weight =  -1.,
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_distance,
+        weight=-1.0,
+        params={"asset_cfg": FEET_CFG},
     )
     feet_swing = RewTerm(
-        func = humanoid_mdp.reward_feet_swing,
-        weight =  3., # here
-        params = {"asset_cfg": FEET_CFG}
+        func=humanoid_mdp.reward_feet_swing,
+        weight=3.0,  # here
+        params={"asset_cfg": FEET_CFG},
     )
+
 
 @configclass
 class TerminationsCfg:
@@ -543,11 +582,13 @@ class TerminationsCfg:
         time_out=True,
     )
 
+
 def override_command_range(env, env_ids, old_value, value, num_steps):
     # Override after num_steps
     if env.common_step_counter > num_steps:
         return value
     return mdp.modify_term_cfg.NO_CHANGE
+
 
 @configclass
 class CurriculumCfg:
@@ -558,8 +599,11 @@ class CurriculumCfg:
 # Environment configuration
 ##
 
+
 class T1ManagerBasedRLEnv(ManagerBasedRLEnv):
-    def __init__(self, cfg: ManagerBasedRLEnvCfg, render_mode: str | None = None, **kwargs):
+    def __init__(
+        self, cfg: ManagerBasedRLEnvCfg, render_mode: str | None = None, **kwargs
+    ):
         super().__init__(cfg=cfg, render_mode=render_mode, **kwargs)
 
     def step(self, action: torch.Tensor) -> VecEnvStepReturn:
@@ -570,7 +614,14 @@ class T1ManagerBasedRLEnv(ManagerBasedRLEnv):
         offset = -self.reward_buf
         self.reward_buf += offset * (self.reward_buf < 0)
 
-        return self.obs_buf, self.reward_buf, self.reset_terminated, self.reset_time_outs, self.extras
+        return (
+            self.obs_buf,
+            self.reward_buf,
+            self.reset_terminated,
+            self.reset_time_outs,
+            self.extras,
+        )
+
 
 @configclass
 class T1BaselineCfg(ManagerBasedRLEnvCfg):

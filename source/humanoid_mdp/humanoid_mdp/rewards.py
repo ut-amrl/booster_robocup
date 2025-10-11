@@ -7,13 +7,11 @@ from isaaclab.assets import Articulation
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import ContactSensor
 import isaaclab.utils.math as math_utils
-from isaaclab.utils.array import convert_to_torch
-from einops import rearrange
-from humanoid_mdp import GaitCycleCommand
 
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnvCfg, ManagerBasedRLEnv
+
 
 def base_linear_velocity_reward(
     env: ManagerBasedRLEnvCfg,

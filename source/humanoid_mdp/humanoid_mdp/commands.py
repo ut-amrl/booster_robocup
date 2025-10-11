@@ -108,6 +108,7 @@ class FrequencyCommandCfg(CommandTermCfg):
     range: tuple[float, float] = MISSING
     """Distribution ranges for the frequency command."""
 
+
 class GaitCycleCommand(CommandTerm):
     r"""Command generator that generates a gait cycle from a frequency sampled from a uniform distribution.
 
@@ -160,10 +161,10 @@ class GaitCycleCommand(CommandTerm):
     """
 
     def _update_metrics(self) -> None:
-        self.metrics["frequency"][:] = self.freq[:,0]
-        self.metrics["phase"][:] = self.phase[:,0]
-        self.metrics["gait_cycle_cos"][:] = self.gait_cycle[:,0]
-        self.metrics["gait_cycle_sin"][:] = self.gait_cycle[:,1]
+        self.metrics["frequency"][:] = self.freq[:, 0]
+        self.metrics["phase"][:] = self.phase[:, 0]
+        self.metrics["gait_cycle_cos"][:] = self.gait_cycle[:, 0]
+        self.metrics["gait_cycle_sin"][:] = self.gait_cycle[:, 1]
 
     def _resample_command(self, env_ids: Sequence[int]) -> None:
         # sample frequency commands
@@ -175,8 +176,9 @@ class GaitCycleCommand(CommandTerm):
     def _update_command(self) -> None:
         """Post-processes the frequency command."""
         self.phase[:, :] = torch.fmod(self.freq * current_time_s(self._env), 1)
-        self.gait_cycle[:, 0] = torch.cos(2 * torch.pi * self.phase)[:,0]
-        self.gait_cycle[:, 1] = torch.sin(2 * torch.pi * self.phase)[:,0]
+        self.gait_cycle[:, 0] = torch.cos(2 * torch.pi * self.phase)[:, 0]
+        self.gait_cycle[:, 1] = torch.sin(2 * torch.pi * self.phase)[:, 0]
+
 
 @configclass
 class GaitCycleCommandCfg(CommandTermCfg):
