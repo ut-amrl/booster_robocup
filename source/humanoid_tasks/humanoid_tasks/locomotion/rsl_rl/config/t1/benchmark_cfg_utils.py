@@ -76,8 +76,8 @@ def filtered_func(
 ):
     """Wrapper to filter env ids by subtask index before calling a function.
 
-    This function filters the env ids using the subtask index, so it assumes
-    that the envs are evenly split and their order is consistent.
+    This function grabs a subset of the env_ids in the range from subtask_id * n
+    to subtask_id * (n + 1) and calls the event function on the filtered env_ids.
     """
     n = env.num_envs // env.cfg.num_subtasks
     sub_env_ids = env_ids[
@@ -88,6 +88,10 @@ def filtered_func(
 
 
 class reset_root_state_uniform_once(ManagerTermBase):
+    """Reset term that moves the agent underground after its first death for visual purposes
+
+    Internally calls reset_root_state_uniform.
+    """
     def __init__(self, cfg: EventTermCfg, env: ManagerBasedEnv):
         super().__init__(cfg, env)
 

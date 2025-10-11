@@ -39,11 +39,9 @@ class Subtask:
     )
     events: Dict[str, EventTermCfg] = {}
 
-
 @configclass
 class WalkSubtask(Subtask):
     name = "walk"
-
 
 @configclass
 class RunSubtask(Subtask):
@@ -60,14 +58,12 @@ class RunSubtask(Subtask):
         heading_command=True,
     )
 
-
 @configclass
 class UnevenSubtask(Subtask):
     name = "uneven"
     subterrain = terrain_gen.HfRandomUniformTerrainCfg(
         noise_range=(0.00, 0.03), noise_step=0.005
     )
-
 
 @configclass
 class PushSubtask(Subtask):
