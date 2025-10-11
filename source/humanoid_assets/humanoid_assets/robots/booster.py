@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.actuators import IdealPDActuatorCfg
 from isaaclab.assets import ArticulationCfg
 
 import os
@@ -13,10 +13,10 @@ EXT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 # Configuration
 ##
 
-T1_CFG = ArticulationCfg(
+T1_CFG2 = ArticulationCfg(
     prim_path="{ENV_REGEX_NS}/Robot",
     spawn=sim_utils.UrdfFileCfg(
-        fix_base=False,
+        fix_base= False,
         merge_fixed_joints=False,
         joint_drive=sim_utils.UrdfConverterCfg.JointDriveCfg(
             gains=sim_utils.UrdfConverterCfg.JointDriveCfg.PDGainsCfg(
@@ -24,7 +24,6 @@ T1_CFG = ArticulationCfg(
             )
         ),
         make_instanceable=True,
-        # asset_path=f"{EXT_DIR}/data/urdf/t1/t1.urdf",
         asset_path=f"{EXT_DIR}/data/urdf/t1/T1_locomotion.urdf",
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
@@ -42,72 +41,51 @@ T1_CFG = ArticulationCfg(
             solver_position_iteration_count=4,
             solver_velocity_iteration_count=4,
         ),
+        collision_props=sim_utils.CollisionPropertiesCfg(
+            collision_enabled=True,
+            contact_offset=0.02,
+            rest_offset=0.0
+        )
     ),
     init_state=ArticulationCfg.InitialStateCfg(
-        pos=(0.0, 0.0, 0.7), # maybe needs nonzero height
+        pos=(0.0, 0.0, 0.72),
         joint_pos={
-                #    "joint_h.*": 0.0,
-                #    "joint_a[lr]1": 0.25,
-                #    "joint_al2": -1.4,
-                #    "joint_al3": 0.0,
-                #    "joint_al4": -0.5,
-                #    "joint_ar2": 1.4,
-                #    "joint_ar3": 0.0,
-                #    "joint_ar4": 0.5,
-                #    "joint_waist": 0.0,
                    "joint_l[lr]1": -0.2,
                    "joint_l[lr]2": 0.0,
                    "joint_l[lr]3": 0.0,
-                   "joint_l[lr]4": 0.4, # should be .4
+                   "joint_l[lr]4": 0.4,
                    "joint_l[lr]5": -0.25,
                    "joint_l[lr]6": 0.0,
                    },
     ),
     actuators={
-        # "head": ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_h.*"],
-        #     stiffness=20,
-        #     damping=0.1,
-        # ),
-        # "shoulder_pitch" : ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_a[lr]1"],
-        #     stiffness=20,
-        #     damping=0.5,
-        # ),
-        # "shoulder_roll" : ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_a[lr]2"],
-        #     stiffness=20,
-        #     damping=1.5,
-        # ),
-        # "elbows": ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_a[lr][3-4]"],
-        #     stiffness=20,
-        #     damping=0.2,
-        # ),
-        # "waist": ImplicitActuatorCfg(
-        #     joint_names_expr=["joint_waist"],
-        #     stiffness=200,
-        #     damping=5.0,
-        # ),
-        "hip_pitch_roll": ImplicitActuatorCfg(
+        "hip_pitch_roll": IdealPDActuatorCfg(
             joint_names_expr=["joint_l[lr][1-2]"],
             stiffness=200,
             damping=5.0,
+            friction = 0.0,
+            effort_limit_sim = {"joint_ll1": 45, "joint_ll2": 30, "joint_lr1": 45, "joint_lr2": 30,}
         ),
-        "hip_yaw": ImplicitActuatorCfg(
+        "hip_yaw": IdealPDActuatorCfg(
             joint_names_expr=["joint_l[lr]3"],
             stiffness=200,
             damping=5.0,
+            friction = 0.0,
+            effort_limit_sim = {"joint_ll3": 30, "joint_lr3": 30,}
         ),
-        "knee": ImplicitActuatorCfg(
+        "knee": IdealPDActuatorCfg(
             joint_names_expr=["joint_l[lr]4"],
             stiffness=200,
             damping=5.0,
+            friction = 0.0,
+            effort_limit_sim = {"joint_ll4": 60, "joint_lr4": 60,}
         ),
-        "ankles": ImplicitActuatorCfg(
+        "ankles": IdealPDActuatorCfg(
             joint_names_expr=["joint_l[lr][5-6]"],
             stiffness=50,
             damping=1.0,
+            friction = 0.0,
+            effort_limit_sim = {"joint_ll5": 24, "joint_lr5": 24,"joint_ll6": 15, "joint_lr6": 15,}
         ),
     },
 )

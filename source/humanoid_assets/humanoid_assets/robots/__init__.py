@@ -8,5 +8,4 @@
 ##
 
 from .booster import *  # noqa: F403
-from .booster2 import *  # noqa: F403
 from .ihmc import *  # noqa: F403

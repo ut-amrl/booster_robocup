@@ -46,6 +46,7 @@ class PPO:
         # Distributed training parameters
         multi_gpu_cfg: dict | None = None,
     ):
+
         # device-related parameters
         self.device = device
         self.is_multi_gpu = multi_gpu_cfg is not None
@@ -348,10 +349,14 @@ class PPO:
             else:
                 value_loss = (returns_batch - value_batch).pow(2).mean()
 
+            # bound loss
+            bound_loss = torch.clip(mu_batch - 1.0, min=0.0).square().mean() + torch.clip(mu_batch + 1.0, max=0.0).square().mean()
+
             loss = (
                 surrogate_loss
                 + self.value_loss_coef * value_loss
                 - self.entropy_coef * entropy_batch.mean()
+                + bound_loss
             )
 
             # Symmetry loss

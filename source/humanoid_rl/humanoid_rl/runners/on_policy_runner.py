@@ -13,7 +13,7 @@ import warnings
 from collections import deque
 
 import rsl_rl
-from rsl_rl.algorithms import PPO
+from humanoid_rl.algorithms import PPO
 from rsl_rl.env import VecEnv
 from rsl_rl.modules import (
     ActorCritic,

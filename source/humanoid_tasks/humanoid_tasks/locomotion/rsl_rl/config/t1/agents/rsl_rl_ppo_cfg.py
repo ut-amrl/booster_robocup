@@ -4,7 +4,7 @@ from isaaclab_rl.rsl_rl import (
     RslRlPpoActorCriticCfg,
     RslRlPpoAlgorithmCfg,
 )
-
+import math
 
 @configclass
 class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
@@ -17,7 +17,7 @@ class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
     logger = "wandb"
     wandb_project = "T1_Baseline"
     policy = RslRlPpoActorCriticCfg(
-        init_noise_std=0.135335283237, # logstd = -2
+        init_noise_std=math.exp(-2), # logstd = -2
         actor_hidden_dims=[512, 256, 128],
         critic_hidden_dims=[512, 256, 128],
         activation="elu",
@@ -36,3 +36,4 @@ class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
+    clip_actions = 1.0

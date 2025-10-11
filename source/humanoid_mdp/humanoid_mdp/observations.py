@@ -9,15 +9,16 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import Articulation
+from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers.manager_base import ManagerTermBase
 from isaaclab.managers.manager_term_cfg import ObservationTermCfg
 from isaaclab.sensors import RayCaster
 
 if TYPE_CHECKING:
-    from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnvCfg
+    from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnv, ManagerBasedRLEnvCfg
     from isaaclab.sensors import ContactSensor
+import isaaclab.utils.math as math_utils
 
 """
 Sensors.
@@ -64,6 +65,21 @@ class contact_friction(ManagerTermBase):
     ) -> torch.Tensor:
         return self.friction.clone()
 
+def body_mass(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """access the ground truth mass of the body"""
+    asset: RigidObject | Articulation = env.scene[asset_cfg.name]
+    masses = asset.root_physx_view.get_masses()[:, asset_cfg.body_ids].to(asset.device)
+    default_masses = asset.data.default_mass[:, asset_cfg.body_ids].to(asset.device)
+    return (masses - default_masses) / default_masses
+
+def base_com(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """access the ground truth com of the body"""
+    # https://github.com/isaac-sim/IsaacLab/issues/3211
+    asset: RigidObject | Articulation = env.scene[asset_cfg.name]
+    com_pos_w = asset.data.root_com_pos_w
+    root_pos_w = asset.data.root_link_pos_w
+    com_pos_b = math_utils.quat_apply_inverse(asset.data.root_link_quat_w, com_pos_w - root_pos_w)
+    return com_pos_b
 
 def contact_sensor(env: ManagerBasedEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     """Height scan from the given sensor w.r.t. the sensor's frame.

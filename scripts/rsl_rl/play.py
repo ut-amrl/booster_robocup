@@ -92,7 +92,7 @@ import os
 import time
 import torch
 
-from rsl_rl.runners import DistillationRunner, OnPolicyRunner
+from humanoid_rl.runners import DistillationRunner, OnPolicyRunner
 
 from isaaclab.envs import (
     DirectMARLEnv,
@@ -213,8 +213,6 @@ def main(
 
     # obtain the trained policy for inference
     policy = runner.get_inference_policy(device=env.unwrapped.device)
-    # model_path = "/home/luisamao/booster_gym/logs/2025-10-01-17-10-02/nn/model_2800.pt"
-    # policy = torch.jit.load(model_path, map_location=env.device)
 
     # extract the neural network module
     # we do this in a try-except to maintain backwards compatibility.
@@ -254,81 +252,15 @@ def main(
     # reset environment
     obs = env.get_observations()
     timestep = 0
-    log_actions = []
-    log_policy_obs = []
-    log_env_obs = []
-    filtered_obs_vel = torch.zeros([1, 12]).to(device = env.device)
-    exp_weight = 0.1
-    import json
-    fname = "examine_joints.json"
-    pos = []
-    log_obs = []
-    log_actions = []
-
-    from isaaclab.managers import SceneEntityCfg
-    # test reset joints
-    # test reset base
-    # test reset apply external force torque
-    # test reset push by setting velocity
-    cfg =  SceneEntityCfg("robot")
-    import isaaclab.envs.mdp as mdp
-    count = 0
     # simulate environment
     while simulation_app.is_running():
         start_time = time.time()
         # run everything in inference mode
         with torch.inference_mode():
-            # if count < 10:
-                # mdp.reset_root_state_uniform(
-                #     env=env.unwrapped,
-                #     env_ids=torch.tensor([0], dtype=torch.long, device=env.device),            # use a 1-D tensor of indices
-                #     pose_range={"yaw": (-torch.pi, torch.pi)},
-                #     velocity_range={
-                #         "x": (-0.5, 0.5),
-                #         "y": (-0.25, 0.25),
-                #         "yaw": (-0.5, 0.5),
-                #     },
-                #     asset_cfg=SceneEntityCfg("robot"),                       # pass the instance (no extra '=')
-                # )                
-                # mdp.reset_joints_by_offset(
-                #     env=env.unwrapped,
-                #     env_ids=torch.tensor([0], dtype=torch.long, device=env.device),
-                #     position_range= (1, 1),
-                #     velocity_range= (0, 0),
-                #     asset_cfg = SceneEntityCfg("robot", joint_names=["joint_l[lr].*"]),                      # pass the instance (no extra '=')
-                # )                
-                # count += 1
             # agent stepping
-            # obs = obs["policy"]
-            # idx = torch.tensor(
-            #     list(range(5, 8)) +        # gravity
-            #     list(range(8, 11)) +       # base_ang_vel
-            #     list(range(0, 3)) +        # commands
-            #     [3] +                      # cos
-            #     [4] +                      # sin
-            #     list(range(11, 23)) +      # dof_pos
-            #     list(range(23, 35)) +      # dof_vel
-            #     list(range(35, 47))        # actions
-            # )
-
-            # obs = obs[:, idx]
-            actions, _ = policy(obs)
-            # actions *= 0
-            log_obs.append(obs["policy"].cpu().numpy().tolist())
-            log_actions.append(actions.cpu().numpy().tolist())
+            actions = policy(obs)
+            # env stepping
             obs, _, _, _ = env.step(actions)
-
-            obs_action_dict = {
-                "obs": log_obs,
-                "actions": log_actions
-            }
-            import json
-            fname = "/home/luisamao/booster_robocup/debug_logs/lab_obs_action_floating.json"
-            with open(fname, "w") as f:
-                json.dump(obs_action_dict, f, indent=4, sort_keys=True)
-
-
-            
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -342,12 +274,6 @@ def main(
 
     # close the simulator
     env.close()
-    log_file = "/home/luisamao/booster_robocup/stat.json"
-    # log_dict = {
-    #     "actions": log_actions,
-    #     "policy_obs": log_policy_obs,
-    #     "env_obs": log_env_obs,
-    # }
 
 
 if __name__ == "__main__":

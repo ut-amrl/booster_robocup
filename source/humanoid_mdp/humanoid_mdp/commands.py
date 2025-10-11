@@ -138,17 +138,6 @@ class GaitCycleCommand(CommandTerm):
         self.metrics["phase"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["gait_cycle_cos"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["gait_cycle_sin"] = torch.zeros(self.num_envs, device=self.device)
-        
-        # debugging
-        self.debug_log = dict()
-        self.debug_log["frequency"] = []
-        self.debug_log["phase"] = []
-        self.debug_log["gait_cycle_cos"] = []
-        self.debug_log["gait_cycle_sin"] = []
-        self.debug_log["curr_time_s"] = []
-
-
-
 
     def __str__(self) -> str:
         """Return a string representation of the command generator."""
@@ -176,24 +165,6 @@ class GaitCycleCommand(CommandTerm):
         self.metrics["gait_cycle_cos"][:] = self.gait_cycle[:,0]
         self.metrics["gait_cycle_sin"][:] = self.gait_cycle[:,1]
 
-        # debug
-        # import json
-        # log_filename = "/home/luisamao/booster_robocup/gait_commands.json"
-        # with open(log_filename, 'r') as f:
-        #     data = json.load(f)
-        # data.append(self.debug_log)
-        # with open(log_filename, "w") as f:
-        #     json.dump(data, f, indent=4)
-
-
-
-        self.debug_log["frequency"] = []
-        self.debug_log["phase"] = []
-        self.debug_log["gait_cycle_cos"] = []
-        self.debug_log["gait_cycle_sin"] = []
-        self.debug_log["curr_time_s"] = []
-
-
     def _resample_command(self, env_ids: Sequence[int]) -> None:
         # sample frequency commands
         r = torch.empty(len(env_ids), device=self.device)
@@ -206,13 +177,6 @@ class GaitCycleCommand(CommandTerm):
         self.phase[:, :] = torch.fmod(self.freq * current_time_s(self._env), 1)
         self.gait_cycle[:, 0] = torch.cos(2 * torch.pi * self.phase)[:,0]
         self.gait_cycle[:, 1] = torch.sin(2 * torch.pi * self.phase)[:,0]
-
-        # self.debug_log["frequency"].append(self.freq[:,0, 0].item())
-        # self.debug_log["phase"].append(self.phase[:, 0, 0].cpu().item())
-        # self.debug_log["gait_cycle_cos"].append(self.gait_cycle[:, 0, 0].item())
-        # self.debug_log["gait_cycle_sin"].append(self.gait_cycle[:, 1, 0].item())
-        # self.debug_log["curr_time_s"].append(current_time_s(self._env, 0).item())
-
 
 @configclass
 class GaitCycleCommandCfg(CommandTermCfg):
