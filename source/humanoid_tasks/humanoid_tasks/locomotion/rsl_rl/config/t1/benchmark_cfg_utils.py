@@ -67,7 +67,7 @@ def split_command_cfg(
     return cfg
 
 
-def filtered_func(
+def wrap_subtask_func(
     env: ManagerBasedEnv,
     env_ids: torch.Tensor,
     subtask_idx: str,

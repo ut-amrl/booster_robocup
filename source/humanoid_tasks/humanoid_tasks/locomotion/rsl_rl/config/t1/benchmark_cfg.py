@@ -16,7 +16,7 @@ import isaaclab.envs.mdp as mdp
 from .rsl_rl_cfg import T1BaselineCfg
 from .benchmark_cfg_utils import (
     split_command_cfg,
-    filtered_func,
+    wrap_subtask_func,
     reset_root_state_uniform_once,
     subterrain_out_of_bounds,
 )
@@ -129,7 +129,7 @@ class T1Baseline_BENCHMARK(T1BaselineCfg):
         for idx, subtask in enumerate(self.subtasks):
             for event_name, event_cfg in subtask.events.items():
                 filtered_event_cfg = EventTermCfg(
-                    func=filtered_func,
+                    func=wrap_subtask_func,
                     mode=event_cfg.mode,
                     interval_range_s=event_cfg.interval_range_s,
                     is_global_time=event_cfg.is_global_time,
