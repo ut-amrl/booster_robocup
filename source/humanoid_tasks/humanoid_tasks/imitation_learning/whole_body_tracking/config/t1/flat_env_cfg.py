@@ -1,12 +1,43 @@
 from isaaclab.utils import configclass
 
+from isaaclab.managers import TerminationTermCfg as DoneTerm
+from isaaclab.managers import SceneEntityCfg
+
 from humanoid_assets import T1_CFG, T1_ACTION_SCALE
 from humanoid_tasks.imitation_learning.whole_body_tracking.config.t1.agents.rsl_rl_ppo_cfg import LOW_FREQ_SCALE
 from humanoid_tasks.imitation_learning.whole_body_tracking.tracking_env_cfg import TrackingEnvCfg
+import humanoid_tasks.imitation_learning.whole_body_tracking.mdp as mdp
 
+@configclass
+class TerminationsCfg:
+    """Termination terms for the MDP."""
+
+    time_out = DoneTerm(func=mdp.time_out, time_out=True)
+    anchor_pos = DoneTerm(
+        func=mdp.bad_anchor_pos_z_only,
+        params={"command_name": "motion", "threshold": 0.2},
+    )
+    anchor_ori = DoneTerm(
+        func=mdp.bad_anchor_ori,
+        params={"asset_cfg": SceneEntityCfg("robot"), "command_name": "motion", "threshold": 0.6},
+    )
+    ee_body_pos = DoneTerm(
+        func=mdp.bad_motion_body_pos_z_only,
+        params={
+            "command_name": "motion",
+            "threshold": 0.2,
+            "body_names": [
+                "ll5",
+                "lr5",
+                "al4",
+                "ar4",
+            ],
+        },
+    )
 
 @configclass
 class T1FlatEnvCfg(TrackingEnvCfg):
+    terminations: TerminationsCfg = TerminationsCfg()
     def __post_init__(self):
         super().__post_init__()
 
@@ -28,6 +59,8 @@ class T1FlatEnvCfg(TrackingEnvCfg):
             "ar4",
             "h2"
         ]
+
+        # self.rewards.action_rate_l2.weight = -0.00
 
 
 @configclass
