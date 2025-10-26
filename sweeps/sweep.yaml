@@ -1,0 +1,35 @@
+program: ./isaaclab.sh
+name: T1_Baseline_v1_Sweep
+method: bayes
+metric:
+  name: Sweep/performance
+  goal: maximize
+early_terminate:
+  type: hyperband
+  min_iter: 5000
+  eta: 3
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - ${args_no_hyphens}
+parameters:
+  agent.num_steps_per_env:
+    values: [24, 32, 64, 128]
+    distribution: categorical
+  agent.algorithm.learning_rate:
+    min: 1e-5
+    max: 2e-3
+    distribution: log_uniform_values
+  agent.policy.activation:
+    values: [elu, relu, gelu]
+    distribution: categorical
+  env.scene.terrain.terrain_generator.sub_terrains.random_rough.noise_step:
+    min: 0.005
+    max: 0.01
+    distribution: uniform

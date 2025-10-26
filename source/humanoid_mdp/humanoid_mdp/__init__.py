@@ -6,3 +6,4 @@ from .rewards import *  # noqa: F403
 from .booster_walk_rewards import *  # noqa: F403
 from .terminations import *  # noqa: F403
 from .terrains import *  # noqa: F403
+from .recorders import * # noqa: F403

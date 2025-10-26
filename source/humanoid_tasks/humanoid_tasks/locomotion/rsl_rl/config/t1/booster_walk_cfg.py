@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 
+from humanoid_mdp.recorders import SweepPerformanceRecorder
+from humanoid_mdp.terrains import COBBLESTONE_ROAD_CFG
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import (
@@ -16,6 +18,7 @@ from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
+from isaaclab.managers import RecorderTermCfg as RecTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.terrains import TerrainImporterCfg
@@ -25,6 +28,7 @@ from isaaclab.utils.assets import (
     NVIDIA_NUCLEUS_DIR,
 )
 from isaaclab.utils.noise import GaussianNoiseCfg
+from isaaclab.managers.recorder_manager import RecorderManagerBaseCfg
 
 
 import isaaclab.envs.mdp as mdp
@@ -71,8 +75,8 @@ class SceneCfg(InteractiveSceneCfg):
     # ground terrain
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="plane",  # could also be "plane"
-        terrain_generator=None,  # or none
+        terrain_type="generator",  # could also be "plane"
+        terrain_generator=COBBLESTONE_ROAD_CFG,  # or none
         # max_init_terrain_level=humanoid_mdp.COBBLESTONE_ROAD_CFG.num_rows - 1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
@@ -592,6 +596,10 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
 
+@configclass
+class RecorderCfg(RecorderManagerBaseCfg):
+    sweep_performance = RecTerm(SweepPerformanceRecorder)
+
 ##
 # Environment configuration
 ##
@@ -642,6 +650,7 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
+    recorders: RecorderCfg = RecorderCfg()
 
     def __post_init__(self) -> None:
         """Post initialization."""

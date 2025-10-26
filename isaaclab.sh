@@ -13,7 +13,10 @@
 set -e
 
 # Set tab-spaces
-tabs 4
+if [[ $- == *i* ]] && [ -t 1 ]; then
+    tabs 4 || true
+fi
+
 
 # get source directory
 export ISAACLAB_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -335,7 +338,8 @@ while [[ $# -gt 0 ]]; do
             python_exe=$(extract_python_exe)
             echo "[INFO] Using python from: ${python_exe}"
             shift # past argument
-            ${python_exe} "$@"
+            echo "${python_exe} $@"
+            exec ${python_exe} "$@"
             # exit neatly
             break
             ;;

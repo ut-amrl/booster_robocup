@@ -14,9 +14,9 @@ COBBLESTONE_ROAD_CFG = terrain_gen.TerrainGeneratorCfg(
     difficulty_range=(0.0, 1.0),
     use_cache=False,
     sub_terrains={
-        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.2),
+        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=1.0),
         "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=0.2, noise_range=(0.02, 0.05), noise_step=0.02, border_width=0.25
+            proportion=1.0, noise_range=(0.02, 0.05), noise_step=0.02, border_width=0.25
         ),
     },
 )
