@@ -12,6 +12,7 @@ from isaaclab.envs import (
     ViewerCfg,
     VecEnvStepReturn,
 )
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -85,11 +86,11 @@ class SceneCfg(InteractiveSceneCfg):
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
-        visual_material=sim_utils.MdlFileCfg(
-            mdl_path=f"{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl",
-            project_uvw=True,
-            texture_scale=(0.25, 0.25),
-        ),
+        # visual_material=sim_utils.MdlFileCfg(
+        #     mdl_path=f"{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl",
+        #     project_uvw=True,
+        #     texture_scale=(0.25, 0.25),
+        # ),
         debug_vis=False,  # show origin of each environment
         env_spacing=5.0,
     )
@@ -594,6 +595,7 @@ def override_command_range(env, env_ids, old_value, value, num_steps):
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
+    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_survival)
 
 
 @configclass

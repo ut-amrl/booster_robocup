@@ -55,3 +55,34 @@ def terrain_levels_vel(
     terrain.update_env_origins(env_ids, move_up, move_down)
     # return the mean terrain level
     return torch.mean(terrain.terrain_levels.float())
+
+def terrain_levels_survival(
+    env: ManagerBasedRLEnv,
+    env_ids: Sequence[int],
+    promote_threshold,
+    demote_threshold,
+) -> torch.Tensor:
+    """Curriculum based on the robot's survival time.
+
+    This term is used to increase the difficulty when the robot survives longer 
+    than `promote_threshold * max_episode_length` and decrease the difficulty when the
+    robot survives less than `demote_threshold * max_episode_length`.
+
+    .. note::
+        It is only possible to use this term with the terrain type ``generator``. For further information
+        on different terrain types, check the :class:`isaaclab.terrains.TerrainImporter` class.
+
+    Returns:
+        The mean terrain level for the given environment ids.
+    """
+    terrain: TerrainImporter = env.scene.terrain
+
+    # robots that walked far enough progress to harder terrains
+    move_up = env.episode_length_buf[env_ids] > promote_threshold * env.max_episode_length
+    # robots that walked less than half of their required distance go to simpler terrains
+    move_down = env.episode_length_buf[env_ids] < demote_threshold * env.max_episode_length
+
+    # update terrain levels
+    terrain.update_env_origins(env_ids, move_up, move_down)
+    # return the mean terrain level
+    return torch.mean(terrain.terrain_levels.float())
