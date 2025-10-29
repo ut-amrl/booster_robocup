@@ -3,9 +3,12 @@ from __future__ import annotations
 import numpy as np
 import scipy.interpolate as interpolate
 
+from isaaclab.utils import configclass
+from isaaclab.terrains.height_field.utils import height_field_to_mesh
 import isaaclab.terrains as terrain_gen
 
-def random_uniform_terrain_with_difficulty(difficulty: float, cfg: CurriculumHFRandomUniformTerrainCfg) -> np.ndarray:
+@height_field_to_mesh
+def random_uniform_terrain_with_difficulty(difficulty: float, cfg: HFRandomUniformTerrainCfgWithDifficulty) -> np.ndarray:
     """Generate a terrain with height sampled uniformly from a range based on the difficulty.
 
     range = (max - difficulty * (max-min), max)
@@ -66,6 +69,7 @@ def random_uniform_terrain_with_difficulty(difficulty: float, cfg: CurriculumHFR
     return np.rint(z_upsampled).astype(np.int16)
 
 
+@configclass
 class HFRandomUniformTerrainCfgWithDifficulty(terrain_gen.HfRandomUniformTerrainCfg):
     function = random_uniform_terrain_with_difficulty
 

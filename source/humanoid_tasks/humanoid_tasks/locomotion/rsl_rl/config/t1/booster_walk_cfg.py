@@ -86,6 +86,7 @@ class SceneCfg(InteractiveSceneCfg):
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
+        visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(255.0, 255.0, 255.0)),
         # visual_material=sim_utils.MdlFileCfg(
         #     mdl_path=f"{NVIDIA_NUCLEUS_DIR}/Materials/Base/Natural/Grass_Countryside.mdl",
         #     project_uvw=True,
@@ -642,9 +643,9 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
 
     # Viewer
     viewer = ViewerCfg(
-        eye=(0, 0, 10),
-        lookat=(0, 10, 0),
-        origin_type="env",
+        eye=(-10, -150, 10),
+        lookat=(-10, -120, 0),
+        origin_type="world",
         env_index=0,
         asset_name="robot",
     )  # Scene settings
