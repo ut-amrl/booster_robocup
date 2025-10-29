@@ -595,7 +595,13 @@ def override_command_range(env, env_ids, old_value, value, num_steps):
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
-    terrain_levels = CurrTerm(func=humanoid_mdp.terrain_levels_survival)
+    terrain_levels = CurrTerm(
+        func=humanoid_mdp.terrain_levels_survival,
+        params={
+            "promote_threshold": 0.75,
+            "demote_threshold": 0.50,
+        }
+    )
 
 
 @configclass
@@ -636,8 +642,8 @@ class T1BaselineCfg(ManagerBasedRLEnvCfg):
 
     # Viewer
     viewer = ViewerCfg(
-        eye=(12.5, 12.5, 10.5),
-        #    lookat=(50.0, 0.0, 0.0),
+        eye=(0, 0, 10),
+        lookat=(0, 10, 0),
         origin_type="env",
         env_index=0,
         asset_name="robot",
