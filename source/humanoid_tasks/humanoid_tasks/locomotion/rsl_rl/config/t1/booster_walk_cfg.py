@@ -691,6 +691,14 @@ class T1Baseline_PLAY(T1BaselineCfg):
         # post init of parent
         super().__post_init__()
 
+        self.viewer = ViewerCfg(
+            eye=(12.5, 12.5, 10.5),
+            #    lookat=(50.0, 0.0, 0.0),
+            origin_type="env",
+            env_index=0,
+            asset_name="robot",
+        )
+
         # make a smaller scene for play
         self.scene.num_envs = 50
         self.scene.env_spacing = 2.5

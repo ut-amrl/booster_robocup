@@ -92,7 +92,7 @@ import os
 import time
 import torch
 
-from humanoid_rl.runners import DistillationRunner, OnPolicyRunner
+from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
 from isaaclab.envs import (
     DirectMARLEnv,
