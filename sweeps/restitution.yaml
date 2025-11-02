@@ -17,7 +17,7 @@ command:
   - ${args_json}
 parameters:
   env.scene.terrain.physics_material.restitution:
-    value: 1.0
+    value: 1.0000000001
   env.events.physics_material.params.restitution_range:
     min: 0.0
     max: 1.0
