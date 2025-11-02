@@ -10,7 +10,7 @@ import math
 @configclass
 class T1BaselinePPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 30_100
+    max_iterations = 15_000
     save_interval = 500
     experiment_name = "t1_baseline"
     empirical_normalization = False

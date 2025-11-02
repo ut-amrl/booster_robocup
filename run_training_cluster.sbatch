@@ -23,7 +23,8 @@ echo "Setting environment variables for Singularity..."
 
 # Set environment variables for the container using the SINGULARITYENV_ prefix
 # This is the recommended method.
-export SINGULARITYENV_WANDB_USERNAME="<your-wandb-username>"
+export SINGULARITYENV_WANDB_USERNAME="<your_wandb_username>"
+export SINGULARITYENV_WANDB_API_KEY="<your_wandb_api_key>"
 
 echo "Running Singularity container..."
 singularity exec --nv \
