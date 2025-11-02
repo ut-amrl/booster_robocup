@@ -75,8 +75,8 @@ class SceneCfg(InteractiveSceneCfg):
     # ground terrain
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
-        terrain_type="generator",  # could also be "plane"
-        terrain_generator=COBBLESTONE_ROAD_CFG,  # or none
+        terrain_type="plane",  # could also be "plane"
+        terrain_generator=None,  # or none
         # max_init_terrain_level=humanoid_mdp.COBBLESTONE_ROAD_CFG.num_rows - 1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
