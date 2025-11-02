@@ -17,5 +17,5 @@ command:
   - ${args_json}
 parameters:
   env.rewards.torque_tiredness.weight:
-    values: [-1, -0.01]
+    values: [-1.0, -0.01]
     distribution: categorical

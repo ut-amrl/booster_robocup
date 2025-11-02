@@ -17,5 +17,5 @@ command:
   - ${args_json}
 parameters:
   env.rewards.action_rate.weight:
-    values: [-10, -5, -1, -0.1, -0.01]
+    values: [-10.0, -5.0, -1.0, -0.1, -0.01]
     distribution: categorical

@@ -18,14 +18,14 @@ command:
 parameters:
   env.events.base_external_force_torque.params.force_range:
     values: 
-    - [-10, 10]
-    - [-20, 20]
-    - [-30, 30]
+    - [-10.0, 10.0]
+    - [-20.0, 20.0]
+    - [-30.0, 30.0]
     distribution: categorical
   env.events.base_external_force_torque.params.torque_range:
     values: 
-    - [-1, 1]
-    - [-4, 4]
-    - [-7, 7]
-    - [-10, 10]
+    - [-1.0, 1.0]
+    - [-4.0, 4.0]
+    - [-7.0, 7.0]
+    - [-10.0, 10.0]
     distribution: categorical
