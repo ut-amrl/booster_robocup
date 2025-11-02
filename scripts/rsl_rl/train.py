@@ -72,7 +72,15 @@ parser.add_argument("--wandb_model", type=str, default="", help="Model from Wand
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
+# append JSON override arg
+cli_args.add_json_override_args(parser)
+
+# parse args
 args_cli, hydra_args = parser.parse_known_args()
+
+# load json overrides (if any)
+json_overrides = cli_args.load_json_overrides(args_cli)
+hydra_args += json_overrides
 
 # always enable cameras to record video
 if args_cli.video:

@@ -6,8 +6,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg
@@ -122,3 +124,55 @@ def update_rsl_rl_cfg(agent_cfg: RslRlOnPolicyRunnerCfg, args_cli: argparse.Name
         agent_cfg.neptune_project = args_cli.log_project_name
 
     return agent_cfg
+
+
+def add_json_override_args(parser: argparse.ArgumentParser):
+    """Add JSON override argument for Hydra."""
+    parser.add_argument(
+        "--json_overrides",
+        type=str,
+        default=None,
+        help="Path to a JSON file of Hydra-style overrides.",
+    )
+
+
+def _dict_to_overrides(d: dict[str, Any], prefix: str = "") -> list[str]:
+    """Recursively flatten a nested dict into Hydra override strings."""
+    out = []
+    for k, v in d.items():
+        key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            out.extend(_dict_to_overrides(v, key))
+        else:
+            if isinstance(v, (str, list, dict)):
+                rhs = json.dumps(v)
+            elif isinstance(v, bool):
+                rhs = "true" if v else "false"
+            else:
+                rhs = str(v)
+            out.append(f"{key}={rhs}")
+    return out
+
+
+def load_json_overrides(args_cli: argparse.Namespace) -> list[str]:
+    """Load overrides from a JSON file if provided.
+
+    Args:
+        args_cli: Parsed CLI args.
+
+    Returns:
+        A list of Hydra-style override strings (empty if none).
+    """
+    if not getattr(args_cli, "json_overrides", None):
+        return []
+
+    json_path = args_cli.json_overrides
+    if not os.path.exists(json_path):
+        print(f"[WARN] JSON overrides file not found: {json_path}")
+        return []
+
+    with open(json_path, "r") as f:
+        data = json.load(f)
+    overrides = _dict_to_overrides(data)
+    print(f"[INFO] Loaded {len(overrides)} overrides from {json_path}")
+    return overrides
