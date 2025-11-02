@@ -1,0 +1,25 @@
+program: ./isaaclab.sh
+name: FeetRestitution
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.scene.terrain.physics_material.restitution:
+    value: 1.0
+  env.events.physics_material.params.restitution_range:
+    min: 0.0
+    max: 1.0
+    q: 0.333
+    distribution: q_uniform

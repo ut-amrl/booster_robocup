@@ -1,0 +1,24 @@
+program: ./isaaclab.sh
+name: DampingDistribution
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.events.actuator_gains.params.damping_distribution_params.0:
+    values: [0.010, 0.046, 0.215, 1.0]
+    distribution: categorical
+  env.events.actuator_gains.params.damping_distribution_params.1:
+    values: [0.1, 0.237, 0.464, 1.1]
+    distribution: categorical

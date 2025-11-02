@@ -1,0 +1,24 @@
+program: ./isaaclab.sh
+name: StiffnessDistribution
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.events.actuator_gains.params.stiffness_distribution_params.0:
+    values: [1.00, 2.15, 4.64, 10.00]
+    distribution: categorical
+  env.events.actuator_gains.params.stiffness_distribution_params.1:
+    values: [1.10, 5.06, 21.54, 100.0]
+    distribution: categorical

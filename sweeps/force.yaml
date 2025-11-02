@@ -1,0 +1,31 @@
+program: ./isaaclab.sh
+name: ExternalForce
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.events.base_external_force_torque.params.force_range:
+    values: 
+    - [-10, 10]
+    - [-20, 20]
+    - [-30, 30]
+    distribution: categorical
+  env.events.base_external_force_torque.params.torque_range:
+    values: 
+    - [-1, 1]
+    - [-4, 4]
+    - [-7, 7]
+    - [-10, 10]
+    distribution: categorical

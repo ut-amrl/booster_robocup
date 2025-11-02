@@ -1,0 +1,25 @@
+program: ./isaaclab.sh
+name: Actuator
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - echo
+  - ${args_json}
+parameters:
+  env.scene.robot.actuators:
+    values:
+      - {
+          hip_pitch_roll: {class_type: isaaclab.actuators.actuator_pd:IdealPDActuator},
+          hip_yaw:        {class_type: isaaclab.actuators.actuator_pd:IdealPDActuator},
+          knee:           {class_type: isaaclab.actuators.actuator_pd:IdealPDActuator},
+          ankles:         {class_type: isaaclab.actuators.actuator_pd:IdealPDActuator}
+        }
+      - {
+          hip_pitch_roll: {class_type: isaaclab.actuators.actuator_pd:ImplicitActuator},
+          hip_yaw:        {class_type: isaaclab.actuators.actuator_pd:ImplicitActuator},
+          knee:           {class_type: isaaclab.actuators.actuator_pd:ImplicitActuator},
+          ankles:         {class_type: isaaclab.actuators.actuator_pd:ImplicitActuator}
+        }
+    distribution: categorical

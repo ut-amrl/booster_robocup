@@ -1,0 +1,25 @@
+program: ./isaaclab.sh
+name: NoiseStep
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.scene.terrain.terrain_generator.sub_terrains.vertical_scale:
+    value: 0.001
+  env.scene.terrain.terrain_generator.sub_terrains.noise_step:
+    min: 0.001
+    max: 0.02
+    q: 0.006
+    distribution: q_uniform

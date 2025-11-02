@@ -1,0 +1,21 @@
+program: ./isaaclab.sh
+name: TorquesReward
+method: grid
+metric:
+  name: Sweep/performance
+  goal: maximize
+command:
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
+  - ${args_json_file}
+parameters:
+  env.rewards.torques.weight:
+    values: [-0.2, -0.002]
+    distribution: categorical
