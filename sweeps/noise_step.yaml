@@ -14,7 +14,7 @@ command:
   - --headless
   - --video
   - --json_overrides
-  - ${args_json_file}
+  - ${args_json}
 parameters:
   env.scene.terrain.terrain_generator.sub_terrains.vertical_scale:
     value: 0.001

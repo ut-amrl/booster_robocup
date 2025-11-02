@@ -14,7 +14,7 @@ command:
   - --headless
   - --video
   - --json_overrides
-  - ${args_json_file}
+  - ${args_json}
 parameters:
   env.events.base_external_velocity.params:
     parameters:

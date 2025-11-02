@@ -1,14 +1,9 @@
 program: ./isaaclab.sh
 name: T1_Baseline_v1_Sweep
-method: bayes
+method: grid
 metric:
   name: Sweep/performance
   goal: maximize
-early_terminate:
-  type: hyperband
-  min_iter: 1000
-  max_iter: 15000
-  eta: 3
 command:
   - ${env}
   - ${program}

@@ -14,7 +14,7 @@ command:
   - --headless
   - --video
   - --json_overrides
-  - ${args_json_file}
+  - ${args_json}
 parameters:
   env.events.actuator_gains.params.stiffness_distribution_params.0:
     values: [1.00, 3.15, 10.00]

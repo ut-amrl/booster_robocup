@@ -14,7 +14,7 @@ command:
   - --headless
   - --video
   - --json_overrides
-  - ${args_json_file}
+  - ${args_json}
 parameters:
   env.rewards.action_rate.weight:
     values: [-10, -5, -1, -0.1, -0.01]

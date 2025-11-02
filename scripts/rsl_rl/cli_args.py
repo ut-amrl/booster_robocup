@@ -126,18 +126,18 @@ def update_rsl_rl_cfg(agent_cfg: RslRlOnPolicyRunnerCfg, args_cli: argparse.Name
     return agent_cfg
 
 
-def add_json_override_args(parser: argparse.ArgumentParser):
-    """Add JSON override argument for Hydra."""
+def add_json_override_args(parser):
+    """Add argument to directly accept a JSON string of Hydra overrides."""
     parser.add_argument(
         "--json_overrides",
         type=str,
         default=None,
-        help="Path to a JSON file of Hydra-style overrides.",
+        help="Raw JSON string of Hydra-style overrides, e.g. '{\"agent_cfg\": {\"max_iterations\": 3000}}'",
     )
 
 
 def _dict_to_overrides(d: dict[str, Any], prefix: str = "") -> list[str]:
-    """Recursively flatten a nested dict into Hydra override strings."""
+    """Recursively flatten nested dicts into Hydra override strings."""
     out = []
     for k, v in d.items():
         key = f"{prefix}.{k}" if prefix else k
@@ -154,25 +154,13 @@ def _dict_to_overrides(d: dict[str, Any], prefix: str = "") -> list[str]:
     return out
 
 
-def load_json_overrides(args_cli: argparse.Namespace) -> list[str]:
-    """Load overrides from a JSON file if provided.
-
-    Args:
-        args_cli: Parsed CLI args.
-
-    Returns:
-        A list of Hydra-style override strings (empty if none).
-    """
+def load_json_overrides(args_cli) -> list[str]:
+    """Convert the raw JSON string (if provided) into Hydra-style overrides."""
     if not getattr(args_cli, "json_overrides", None):
         return []
 
-    json_path = args_cli.json_overrides
-    if not os.path.exists(json_path):
-        print(f"[WARN] JSON overrides file not found: {json_path}")
-        return []
+    data = json.loads(args_cli.json_overrides)
 
-    with open(json_path, "r") as f:
-        data = json.load(f)
     overrides = _dict_to_overrides(data)
-    print(f"[INFO] Loaded {len(overrides)} overrides from {json_path}")
+    print(f"[INFO] Loaded {len(overrides)} overrides from inline JSON.")
     return overrides

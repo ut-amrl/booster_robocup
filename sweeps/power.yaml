@@ -14,7 +14,7 @@ command:
   - --headless
   - --video
   - --json_overrides
-  - ${args_json_file}
+  - ${args_json}
 parameters:
   env.rewards.power.weight:
     values: [-0.02, -0.0002]

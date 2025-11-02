@@ -5,7 +5,15 @@ metric:
   name: Sweep/performance
   goal: maximize
 command:
-  - echo
+  - ${env}
+  - ${program}
+  - -p
+  - scripts/rsl_rl/train.py
+  - --task
+  - T1-Baseline-v1
+  - --headless
+  - --video
+  - --json_overrides
   - ${args_json}
 parameters:
   env.scene.robot.actuators:
